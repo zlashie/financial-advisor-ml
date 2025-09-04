@@ -1,0 +1,64 @@
+# Model files (pickle files)
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pb
+*.pth
+*.pt
+*.ckpt
+*.model
+*.weights
+
+# Data files
+*.csv
+*.json
+*.parquet
+*.feather
+data/
+datasets/
+raw_data/
+processed_data/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment files
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Build directories
+build/
+dist/
+*.egg-info/

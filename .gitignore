@@ -15,7 +15,6 @@
 *.csv
 *.parquet
 *.feather
-data/
 datasets/
 raw_data/
 processed_data/

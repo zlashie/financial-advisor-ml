@@ -12,42 +12,60 @@ from sklearn.neural_network import MLPRegressor
 import joblib
 import matplotlib.pyplot as plt
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from src.config import config  
+
 
 ########################################
-#### Constants
+#### Load Configuration Values
 ########################################
 
-INVEST_RATIO_MIN = 0
-INVEST_RATIO_MAX = 1
+# General model constants
+RANDOM_STATE = config.get('common', 'general', 'random_state')
 
-MIN_VALID_RANGE = 0
-MAX_VALID_RANGE = 1
+# Investment ratio bounds from evaluation config
+evaluation_config = config.get('models', 'evaluation')
+bounds_config = evaluation_config['investment_ratio_bounds']
+INVEST_RATIO_MIN = bounds_config['min']
+INVEST_RATIO_MAX = bounds_config['max']
 
-N_ESTIMATORS = 100
-MAX_DEPTH = 10
-RANDOM_STATE = 42
+# Valid range for predictions
+valid_range_config = evaluation_config['valid_range']
+MIN_VALID_RANGE = valid_range_config['min']
+MAX_VALID_RANGE = valid_range_config['max']
 
-MIN_SAMPLE_SPLIT = 5
-MIN_SAMPLE_LEAF = 2
-CPU_CORES = -1
+# Fallback values
+FALLBACK_DEFAULT = config.get('models', 'fallback_values', 'default')
 
-TOP_N = 15
+# Random Forest configuration
+rf_config = config.get('models', 'random_forest')
+N_ESTIMATORS = rf_config['n_estimators']
+MAX_DEPTH = rf_config['max_depth']
+MIN_SAMPLE_SPLIT = rf_config['min_samples_split']
+MIN_SAMPLE_LEAF = rf_config['min_samples_leaf']
+CPU_CORES = rf_config['n_jobs']
 
-FIG_SIZE_WIDTH = 10
-FIG_SIZE_HEIGHT = 6
+# Neural Network configuration
+nn_config = config.get('models', 'neural_network')
+NEURAL_HIDDEN_LAYER_SIZES = tuple(nn_config['hidden_layer_sizes'])
+NEURAL_MAX_RUNS = nn_config['max_iterations']
+NEURAL_RANDOM_SEED = RANDOM_STATE  # Use common random state
+NEURAL_REGULARIZATION = nn_config['regularization']
+NEURAL_VALIDATION_FRACTION = nn_config['validation_fraction']
+NEURAL_ACTIVATION = nn_config['activation']
+NEURAL_SOLVER = nn_config['solver']
+NEURAL_LEARNING_STRATEGY = nn_config['learning_rate']
+NEURAL_EARLY_STOPPING = nn_config['early_stopping']
+NEURAL_PATIENCE_ITERATIONS = nn_config['patience_iterations']
 
-NEURAL_HIDDEN_LAYER_SIZES = (100, 50) 
-NEURAL_MAX_RUNS = 1000           
-NEURAL_RANDOM_SEED = 42   
-NEURAL_REGULARIZATION = 0.001
-NEURAL_VALIDATION_FRACTION = 0.1
-NEURAL_ACTIVATION = 'relu'
-NEURAL_SOLVER = 'adam'
-NEURAL_LEARNING_STRATEGY = 'adaptive'
-NEURAL_EARLY_STOPPING = True
-NEURAL_PATIENCE_ITERATIONS = 20
-
-FALLBACK_DEFAULT = 0
+# Visualization configuration
+viz_config = evaluation_config['visualization']
+TOP_N = viz_config['top_features']
+figure_size = viz_config['figure_size']
+FIG_SIZE_WIDTH = figure_size['width']
+FIG_SIZE_HEIGHT = figure_size['height']
 
 ########################################
 #### Base Financial Model Class
@@ -60,7 +78,7 @@ class BaseFinancialModel(ABC):
 
     def __init__(self, model_name: str):
         self.model_name = model_name
-        self_model = None
+        self.model = None
         self.is_trained = False
         self.training_metrics = {}
 
@@ -195,7 +213,7 @@ class LinearRegressionModel(BaseFinancialModel):
         - Magnitude shows strength of influence
         """
         if not self.is_trained:
-            raise ValueError("Model not trainet yet!")
+            raise ValueError("Model not trained yet!")
         
         importance_df = pd.DataFrame({
             'feature': feature_names,
@@ -210,7 +228,7 @@ class LinearRegressionModel(BaseFinancialModel):
         Explain how a prediction was made to reveal financial decisions behind results of model.
         """
         if not self.is_trained:
-            raise ValueError("Model not trainet yet!")
+            raise ValueError("Model not trained yet!")
         
         prediction = self.predict(X_sample)[0]
 

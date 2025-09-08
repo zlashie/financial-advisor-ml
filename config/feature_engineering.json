@@ -1,0 +1,54 @@
+{
+  "market_valuation": {
+    "price_scoring": {
+      "expensive": -1,
+      "fair": 0,
+      "cheap": 1
+    },
+    "pe_thresholds": {
+      "fair_value_max": 20,
+      "fair_value_min": 12
+    },
+    "psychology_scoring": {
+      "fearful": -1,
+      "balanced": 0,
+      "greedy": 1
+    },
+    "vix_thresholds": {
+      "balanced_min": 15,
+      "balanced_max": 30
+    },
+    "market_conditions": {
+      "favorable_threshold": 0,
+      "unfavorable_threshold": 0
+    }
+  },
+  "debt_analysis": {
+    "urgency_thresholds": {
+      "high_ratio": 0.15,
+      "medium_ratio": 0.08
+    },
+    "urgency_scores": {
+      "high": 2,
+      "medium": 1,
+      "low": 0
+    }
+  },
+  "demographics": {
+    "age_groups": {
+      "young_max": 30,
+      "middle_max": 45,
+      "mature_max": 55,
+      "senior_max": 100,
+      "labels": ["young", "middle", "mature", "senior"]
+    },
+    "income_groups": {
+      "percentiles": {
+        "low": 0.33,
+        "high": 0.67
+      },
+      "labels": ["low", "medium", "high"]
+    }
+  },
+  "market_condition_labels": ["favorable", "neutral", "unfavorable"]
+}

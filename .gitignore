@@ -13,7 +13,6 @@
 
 # Data files
 *.csv
-*.json
 *.parquet
 *.feather
 data/

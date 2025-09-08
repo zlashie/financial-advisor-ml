@@ -1,0 +1,99 @@
+{
+  "output": {
+    "training_data_name": "financial_training_data",
+    "complete_runs": 1000
+  },
+  "market_conditions": {
+    "sp500": {
+      "mean": 16,
+      "stddev": 4,
+      "pe_min": 8,
+      "overvalued_threshold": 20,
+      "undervalued_threshold": 12
+    },
+    "treasury": {
+      "max_pct": 8,
+      "min_pct": 0.5
+    },
+    "vix": {
+      "normal_distribution": {
+        "mean": 2.8,
+        "stddev": 0.5
+      },
+      "max": 80,
+      "high_threshold": 30
+    }
+  },
+  "personal_profile": {
+    "age": {
+      "work_min": 22,
+      "work_max": 65,
+      "mortgage_debt_min": 25
+    },
+    "income": {
+      "normal_distribution": {
+        "mean": 10.5,
+        "stddev": 0.6
+      },
+      "discretionary": {
+        "min": 0.05,
+        "max": 0.25
+      },
+      "high_threshold": 100000
+    }
+  },
+  "debt": {
+    "credit_card": {
+      "probability": 0.6,
+      "normal_distribution": {
+        "mean": 8.5,
+        "stddev": 1.2
+      },
+      "rate": {
+        "min": 0.15,
+        "max": 0.25
+      }
+    },
+    "mortgage": {
+      "probability": 0.4,
+      "income_multiple": {
+        "min": 1.5,
+        "max": 4.5,
+        "cap": 4
+      },
+      "rate": {
+        "min": 0.03,
+        "max": 0.07
+      }
+    }
+  },
+  "investment_strategy": {
+    "returns": {
+      "base": 0.1,
+      "adjustment": 0.02,
+      "real_ratio": 0.8,
+      "vix_ratio": 0.9
+    },
+    "allocation_ratios": {
+      "conservative": 0.1,
+      "moderate": 0.3,
+      "growth": 0.6,
+      "aggressive": 0.8,
+      "all_in": 1.0
+    },
+    "debt_rate_thresholds": {
+      "highest": 0.20,
+      "high": 0.12,
+      "medium": 0.06
+    },
+    "age_adjustments": {
+      "risk_divisor": 40,
+      "min_age_factor": 0.6
+    },
+    "income_boost_multiplier": 1.15,
+    "bounds": {
+      "min_investment_ratio": 0,
+      "max_investment_ratio": 1
+    }
+  }
+}

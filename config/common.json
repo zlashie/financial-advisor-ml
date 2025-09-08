@@ -1,0 +1,15 @@
+{
+  "general": {
+    "default_seed": 42,
+    "months_per_year": 12,
+    "test_size": 0.2,
+    "random_state": 42
+  },
+  "financial_constants": {
+    "no_debt": 0,
+    "no_rate": 0,
+    "no_negative_value": 0,
+    "retirement_age": 65,
+    "working_years": 40
+  }
+}

@@ -2,106 +2,120 @@
 #### Dependendencies
 ########################################
 import os
+import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
 from typing import Dict, List
 import random
 
-########################################
-#### Constants
-########################################
-
-DEFAULT_SEED = 42
-NO_DEBT = 0
-NO_RATE = 0
-
-MONTHS_PR_YEAR = 12
-M_DEBT_AGE_MIN = 25
-
-RETURN_BASE = 0.1
-RETURN_ADJUST = 0.02
-RETURN_REALRATIO = 0.8
-RETURN_VIXRATIO = 0.9
-
-SP500_OVERVALUED = 20
-SP500_UNDERVALUED = 12
-
-VIX_HIGH = 30
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from src.config import config  
 
 ########################################
-#### Variables
+#### Load Configuration Values
 ########################################
 
-## Generated data name
+# General constants
+DEFAULT_SEED = config.get('common', 'general', 'default_seed')
+MONTHS_PR_YEAR = config.get('common', 'general', 'months_per_year')
+NO_DEBT = config.get('common', 'financial_constants', 'no_debt')
+NO_RATE = config.get('common', 'financial_constants', 'no_rate')
+RETIREMENT_AGE = config.get('common', 'financial_constants', 'retirement_age')
 
-FIN_TRAIN_DATA_NAME = 'financial_training_data'
-
-## Seed values
+# Data generation settings
+FIN_TRAIN_DATA_NAME = config.get('data_generation', 'output', 'training_data_name')
+COMPLETE_RUNS = config.get('data_generation', 'output', 'complete_runs')
 SEED_VAL = DEFAULT_SEED
 
-## Number of runs
-COMPLETE_RUNS = 1000
+# Market conditions - S&P 500
+SP500_MEAN = config.get('data_generation', 'market_conditions', 'sp500', 'mean')
+SP500_STDDEV = config.get('data_generation', 'market_conditions', 'sp500', 'stddev')
+SP500_PE_MIN = config.get('data_generation', 'market_conditions', 'sp500', 'pe_min')
+SP500_OVERVALUED = config.get('data_generation', 'market_conditions', 'sp500', 'overvalued_threshold')
+SP500_UNDERVALUED = config.get('data_generation', 'market_conditions', 'sp500', 'undervalued_threshold')
 
-## market condition values
-SP500_MEAN = 16
-SP500_STDDEV = 4
-SP500_PE_MIN = 8
+# Treasury rates
+TREASURY_MAX_PCT = config.get('data_generation', 'market_conditions', 'treasury', 'max_pct')
+TREASURY_MIN_PCT = config.get('data_generation', 'market_conditions', 'treasury', 'min_pct')
 
-TREASURY_MAX_PCT = 8
-TREASURY_MIN_PCT = 0.5
+# VIX configuration
+vix_config = config.get('data_generation', 'market_conditions', 'vix')
+VIX_NORMALDIS_MEAN = vix_config['normal_distribution']['mean']
+VIX_NORMALDIS_STDDEV = vix_config['normal_distribution']['stddev']
+VIX_MAX = vix_config['max']
+VIX_HIGH = vix_config['high_threshold']
 
-VIX_NORMALDIS_MEAN = 2.8
-VIX_NORMALDIS_STDDEV = 0.5
-VIX_MAX = 80
+# Personal profile - Age
+personal_config = config.get('data_generation', 'personal_profile')
+WORKAGE_MIN = personal_config['age']['work_min']
+WORKAGE_MAX = personal_config['age']['work_max']
+M_DEBT_AGE_MIN = personal_config['age']['mortgage_debt_min']
 
-## personal profile values
-WORKAGE_MIN = 22
-WORKAGE_MAX = 65
-MONTHLY_INCOME_NORMALDIS_MEAN = 10.5
-MONTHLY_INCOME_NORMALDIS_STDDEV = 0.6
-MONTHLY_INCOME_DIS_MIN = 0.05
-MONTHLY_INCOME_DIS_MAX = 0.25
+# Personal profile - Income
+income_config = personal_config['income']
+MONTHLY_INCOME_NORMALDIS_MEAN = income_config['normal_distribution']['mean']
+MONTHLY_INCOME_NORMALDIS_STDDEV = income_config['normal_distribution']['stddev']
+MONTHLY_INCOME_DIS_MIN = income_config['discretionary']['min']
+MONTHLY_INCOME_DIS_MAX = income_config['discretionary']['max']
+HIGH_INCOME_THRESHOLD = income_config['high_threshold']
 
-## Credit card debt values
-CC_DEBT_P = 0.6
-CC_DEBT_NORMALDIS_MEAN = 8.5
-CC_DEBT_NORMALDIS_STDDEV = 1.2
-CC_RATE_MIN = 0.15
-CC_RATE_MAX = 0.25
+# Debt configuration
+debt_config = config.get('data_generation', 'debt')
 
-## Mortgage debt values
-M_DEBT_P = 0.4
-M_DEBT_INCOME_MIN = 1.5
-M_DEBT_INCOME_MAX = 4.5
-M_DEBT_INCOME_CAP = 4
-M_RATE_MIN = 0.03
-M_RATE_MAX = 0.07
+# Credit card debt
+cc_debt_config = debt_config['credit_card']
+CC_DEBT_P = cc_debt_config['probability']
+CC_DEBT_NORMALDIS_MEAN = cc_debt_config['normal_distribution']['mean']
+CC_DEBT_NORMALDIS_STDDEV = cc_debt_config['normal_distribution']['stddev']
+CC_RATE_MIN = cc_debt_config['rate']['min']
+CC_RATE_MAX = cc_debt_config['rate']['max']
 
-## Investment ratios
-INVEST_CONSERVATIVE = 0.1
-INVEST_MODERATE = 0.3
-INVEST_GROWTH = 0.6
-INVEST_AGGRESSIVE = 0.8
-INVEST_ALLIN = 1
+# Mortgage debt
+m_debt_config = debt_config['mortgage']
+M_DEBT_P = m_debt_config['probability']
+M_DEBT_INCOME_MIN = m_debt_config['income_multiple']['min']
+M_DEBT_INCOME_MAX = m_debt_config['income_multiple']['max']
+M_DEBT_INCOME_CAP = m_debt_config['income_multiple']['cap']
+M_RATE_MIN = m_debt_config['rate']['min']
+M_RATE_MAX = m_debt_config['rate']['max']
 
-## Debt rate ratios
-DEBT_RATE_HIGHEST = 0.20
-DEBT_RATE_HIGH = 0.12
-DEBT_RATE_MEDIUM = 0.06
+# Investment strategy configuration
+strategy_config = config.get('data_generation', 'investment_strategy')
 
-## Age-based investment adjustments
-RETIREMENT_AGE = 65
-AGE_RISK_DIVISOR = 40
-MIN_AGE_FACTOR = 0.6
+# Returns configuration
+returns_config = strategy_config['returns']
+RETURN_BASE = returns_config['base']
+RETURN_ADJUST = returns_config['adjustment']
+RETURN_REALRATIO = returns_config['real_ratio']
+RETURN_VIXRATIO = returns_config['vix_ratio']
 
-## Income-based investment adjustments
-HIGH_INCOME_THRESHOLD = 100000
-INCOME_BOOST_MULTIPLIER = 1.15
+# Allocation ratios
+allocation_config = strategy_config['allocation_ratios']
+INVEST_CONSERVATIVE = allocation_config['conservative']
+INVEST_MODERATE = allocation_config['moderate']
+INVEST_GROWTH = allocation_config['growth']
+INVEST_AGGRESSIVE = allocation_config['aggressive']
+INVEST_ALLIN = allocation_config['all_in']
 
-## Investment ratio bounds
-MIN_INVESTMENT_RATIO = 0
-MAX_INVESTMENT_RATIO = 1
+# Debt rate thresholds
+debt_thresholds = strategy_config['debt_rate_thresholds']
+DEBT_RATE_HIGHEST = debt_thresholds['highest']
+DEBT_RATE_HIGH = debt_thresholds['high']
+DEBT_RATE_MEDIUM = debt_thresholds['medium']
+
+# Age adjustments
+age_adjustments = strategy_config['age_adjustments']
+AGE_RISK_DIVISOR = age_adjustments['risk_divisor']
+MIN_AGE_FACTOR = age_adjustments['min_age_factor']
+
+# Income adjustments
+INCOME_BOOST_MULTIPLIER = strategy_config['income_boost_multiplier']
+
+# Investment bounds
+bounds_config = strategy_config['bounds']
+MIN_INVESTMENT_RATIO = bounds_config['min_investment_ratio']
+MAX_INVESTMENT_RATIO = bounds_config['max_investment_ratio']
 
 ########################################
 #### Class Definitions

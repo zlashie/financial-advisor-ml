@@ -8,63 +8,102 @@ from sklearn.model_selection import train_test_split
 from typing import Tuple, Dict, List
 import joblib
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from src.config import config  
+
 ########################################
-#### Constants
+#### Load Configuration Values
 ########################################
 
+# General constants
 NOT_RELEVANT = None
-MONTHS_PR_YEAR = 12
-NO_DEBT = 0
-NO_NEG_VAL = 0
-TEST_SIZE = 0.2
+MONTHS_PR_YEAR = config.get('common', 'general', 'months_per_year')
+NO_DEBT = config.get('common', 'financial_constants', 'no_debt')
+NO_NEG_VAL = config.get('common', 'financial_constants', 'no_negative_value')
+TEST_SIZE = config.get('common', 'general', 'test_size')
+MAX_AGE = config.get('common', 'financial_constants', 'retirement_age')
+WORKING_YEARS = config.get('common', 'financial_constants', 'working_years')
 
-MARKET_PRICE_EXPENSIVE = -1
-MARKET_PRICE_FAIR = 0
-MARKET_PRICE_CHEAP = 1
+# Market valuation configuration
+market_config = config.get('feature_engineering', 'market_valuation')
 
-PE_FAIRVALUEMAX = 20
-PE_FAIRVALUEMIN = 12
+# Price scoring
+price_scoring = market_config['price_scoring']
+MARKET_PRICE_EXPENSIVE = price_scoring['expensive']
+MARKET_PRICE_FAIR = price_scoring['fair']
+MARKET_PRICE_CHEAP = price_scoring['cheap']
 
-MARKET_PSY_FEARFUL = -1
-MARKET_PSY_BALANCED = 0
-MARKET_PSY_GREEDY = 1
+# P/E thresholds
+pe_thresholds = market_config['pe_thresholds']
+PE_FAIRVALUEMAX = pe_thresholds['fair_value_max']
+PE_FAIRVALUEMIN = pe_thresholds['fair_value_min']
 
-VIX_BALANCEDMIN = 15
-VIX_BALANCEDMAX = 30
+# Psychology scoring
+psychology_scoring = market_config['psychology_scoring']
+MARKET_PSY_FEARFUL = psychology_scoring['fearful']
+MARKET_PSY_BALANCED = psychology_scoring['balanced']
+MARKET_PSY_GREEDY = psychology_scoring['greedy']
 
-MAX_AGE = 65
-WORKING_YEARS = 40
+# VIX thresholds
+vix_thresholds = market_config['vix_thresholds']
+VIX_BALANCEDMIN = vix_thresholds['balanced_min']
+VIX_BALANCEDMAX = vix_thresholds['balanced_max']
 
-HIGH_URGENCY_RATIO = 0.15
-MED_URGENCY_RATIO = 0.08
+# Market conditions
+market_conditions = market_config['market_conditions']
+MARKET_FAVORABLE_THRESHOLD = market_conditions['favorable_threshold']
+MARKET_UNFAVORABLE_THRESHOLD = market_conditions['unfavorable_threshold']
 
-HIGH_URGENCY = 2
-MED_URGENCY = 1
-LOW_URGENCY = 0
+# Debt analysis configuration
+debt_config = config.get('feature_engineering', 'debt_analysis')
 
-AGE_YOUNG_MAX = 30
-AGE_MIDDLE_MAX = 45
-AGE_MATURE_MAX = 55
-AGE_SENIOR_MAX = 100
+# Urgency thresholds
+urgency_thresholds = debt_config['urgency_thresholds']
+HIGH_URGENCY_RATIO = urgency_thresholds['high_ratio']
+MED_URGENCY_RATIO = urgency_thresholds['medium_ratio']
 
-AGE_GROUP_YOUNG = 'young'
-AGE_GROUP_MIDDLE = 'middle'
-AGE_GROUP_MATURE = 'mature'
-AGE_GROUP_SENIOR = 'senior'
+# Urgency scores
+urgency_scores = debt_config['urgency_scores']
+HIGH_URGENCY = urgency_scores['high']
+MED_URGENCY = urgency_scores['medium']
+LOW_URGENCY = urgency_scores['low']
 
-INCOME_LOW_PERCENTILE = 0.33
-INCOME_HIGH_PERCENTILE = 0.67 
+# Demographics configuration
+demographics_config = config.get('feature_engineering', 'demographics')
 
-INCOME_GROUP_LOW = 'low'
-INCOME_GROUP_MEDIUM = 'medium'
-INCOME_GROUP_HIGH = 'high'
+# Age groups
+age_groups = demographics_config['age_groups']
+AGE_YOUNG_MAX = age_groups['young_max']
+AGE_MIDDLE_MAX = age_groups['middle_max']
+AGE_MATURE_MAX = age_groups['mature_max']
+AGE_SENIOR_MAX = age_groups['senior_max']
 
-MARKET_FAVORABLE_THRESHOLD = 0 
-MARKET_UNFAVORABLE_THRESHOLD = 0   
+# Age group labels
+age_labels = age_groups['labels']
+AGE_GROUP_YOUNG = age_labels[0]
+AGE_GROUP_MIDDLE = age_labels[1]
+AGE_GROUP_MATURE = age_labels[2]
+AGE_GROUP_SENIOR = age_labels[3]
 
-MARKET_FAVORABLE = 'favorable'
-MARKET_NEUTRAL = 'neutral'
-MARKET_UNFAVORABLE = 'unfavorable'
+# Income groups
+income_groups = demographics_config['income_groups']
+income_percentiles_config = income_groups['percentiles']
+INCOME_LOW_PERCENTILE = income_percentiles_config['low']
+INCOME_HIGH_PERCENTILE = income_percentiles_config['high']
+
+# Income group labels
+income_labels = income_groups['labels']
+INCOME_GROUP_LOW = income_labels[0]
+INCOME_GROUP_MEDIUM = income_labels[1]
+INCOME_GROUP_HIGH = income_labels[2]
+
+# Market condition labels
+market_condition_labels = config.get('feature_engineering', 'market_condition_labels')
+MARKET_FAVORABLE = market_condition_labels[0]
+MARKET_NEUTRAL = market_condition_labels[1]
+MARKET_UNFAVORABLE = market_condition_labels[2]
 
 ########################################
 #### Classes
@@ -82,7 +121,7 @@ class FinancialFeatureEngineer:
 
     def create_engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Creatue new features from existing ones. ML domain and context understanding to improve performance.
+        Create new features from existing ones. ML domain and context understanding to improve performance.
         """
 
         df_eng = df.copy()
@@ -174,7 +213,7 @@ class FinancialFeatureEngineer:
         """
         Scale numerical features to similar ranges. 
         
-        This is a normalization method to supress outlier stretching of ML outcomes and to prevent data leakage.
+        This is a normalization method to suppress outlier stretching of ML outcomes and to prevent data leakage.
         """
 
         feature_cols = [col for col in df.columns if col not in ['recommended_investment_ratio', 'expected_return']]
@@ -224,7 +263,7 @@ class FinancialFeatureEngineer:
 
         # Step 4: Train/test split BEFORE scaling
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=42, stratify=None
+            X, y, test_size=test_size, random_state=config.get('common', 'general', 'random_state'), stratify=None
         )
 
         print(f"Training set: {X_train.shape[0]} samples")

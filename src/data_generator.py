@@ -117,6 +117,26 @@ bounds_config = strategy_config['bounds']
 MIN_INVESTMENT_RATIO = bounds_config['min_investment_ratio']
 MAX_INVESTMENT_RATIO = bounds_config['max_investment_ratio']
 
+# Market adjustments - Generic approach
+market_adjustments = strategy_config.get('market_adjustments', {})
+
+# Valuation adjustments
+valuation_config = market_adjustments.get('valuation_impact', {})
+OVERVALUED_REDUCTION = valuation_config.get('overvalued_reduction', 0.15)
+UNDERVALUED_BOOST = valuation_config.get('undervalued_boost', 0.15)
+
+# Volatility adjustments  
+volatility_config = market_adjustments.get('volatility_impact', {})
+HIGH_VIX_REDUCTION = volatility_config.get('high_vix_reduction', 0.10)
+
+# Debt-free dampening
+DEBT_FREE_DAMPENING = market_adjustments.get('debt_free_dampening', 0.5)
+
+# Calculate multipliers dynamically
+OVERVALUED_MULTIPLIER = 1.0 - OVERVALUED_REDUCTION  
+UNDERVALUED_MULTIPLIER = 1.0 + UNDERVALUED_BOOST   
+HIGH_VIX_MULTIPLIER = 1.0 - HIGH_VIX_REDUCTION    
+
 ########################################
 #### Class Definitions
 ########################################
@@ -270,6 +290,25 @@ class FinancialDataGenerator:
                     invest_ratio = INVEST_MODERATE
             else:  
                 invest_ratio = INVEST_AGGRESSIVE
+
+            # Step 2.5: Market condition adjustments
+            market_adjustment_factor = 1.0
+
+            if market['sp500_pe'] > SP500_OVERVALUED:
+                market_adjustment_factor *= OVERVALUED_MULTIPLIER
+            elif market['sp500_pe'] < SP500_UNDERVALUED:
+                market_adjustment_factor *= UNDERVALUED_MULTIPLIER
+
+            if market['vix'] > VIX_HIGH:
+                market_adjustment_factor *= HIGH_VIX_MULTIPLIER
+
+            # Apply market adjustments with dampening for debt-free individuals
+            if has_no_debt:
+                # Debt-free individuals are less affected by market conditions
+                dampened_adjustment = 1.0 + (market_adjustment_factor - 1.0) * DEBT_FREE_DAMPENING
+                invest_ratio *= dampened_adjustment
+            else:
+                invest_ratio *= market_adjustment_factor
 
             # Step 3: Personal adjustments
 

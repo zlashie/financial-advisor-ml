@@ -91,6 +91,16 @@
       "min_age_factor": 0.6
     },
     "income_boost_multiplier": 1.15,
+    "market_adjustments": {
+      "valuation_impact": {
+        "overvalued_reduction": 0.15,
+        "undervalued_boost": 0.15
+      },
+      "volatility_impact": {
+        "high_vix_reduction": 0.10
+      },
+      "debt_free_dampening": 0.5
+    },
     "bounds": {
       "min_investment_ratio": 0,
       "max_investment_ratio": 1

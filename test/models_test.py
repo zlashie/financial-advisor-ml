@@ -312,7 +312,7 @@ def test_data_generation():
         print("  ✓ Data generator creation successful")
         
         # Test small dataset generation
-        test_size = min(100, DATASET_SIZE) 
+        test_size = min(500, DATASET_SIZE) 
         raw_data = generator.generate_complete_dataset(test_size)
         print(f"  ✓ Dataset generation successful ({raw_data.shape[0]} samples)")
         

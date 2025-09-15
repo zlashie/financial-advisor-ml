@@ -7,8 +7,37 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.data_generator import FinancialDataGenerator
 from src.config import config
+from src.generators.financial_dataset_generator import FinancialDatasetGenerator
+from src.generators.market_data_generator import SP500MarketDataGenerator
+from src.generators.personal_profile_generator import StandardPersonalProfileGenerator
+from src.calculators.investment_strategy_calculator import OptimalInvestmentStrategyCalculator
+from src.factories.config_factory import ConfigFactory
+
+########################################
+#### Setup Generators
+########################################
+
+# Create configurations
+market_config = ConfigFactory.create_market_config()
+general_config = ConfigFactory.create_general_config()
+personal_config = ConfigFactory.create_personal_config()
+debt_config = ConfigFactory.create_debt_config()
+strategy_config = ConfigFactory.create_strategy_config()
+
+# Create generators (Dependency Injection)
+market_generator = SP500MarketDataGenerator(market_config, general_config.default_seed)
+personal_generator = StandardPersonalProfileGenerator(
+    personal_config, debt_config, general_config, general_config.default_seed
+)
+strategy_calculator = OptimalInvestmentStrategyCalculator(
+    strategy_config, general_config, market_config
+)
+
+# Create main dataset generator
+dataset_generator = FinancialDatasetGenerator(
+    market_generator, personal_generator, strategy_calculator
+)
 
 ########################################
 #### Load Test Configuration
@@ -41,10 +70,10 @@ MIN_INVESTMENT_RATIO = bounds_config['min_investment_ratio']
 MAX_INVESTMENT_RATIO = bounds_config['max_investment_ratio']
 
 # Load market thresholds
-market_config = config.get('data_generation', 'market_conditions')
-SP500_OVERVALUED = market_config['sp500']['overvalued_threshold']
-SP500_UNDERVALUED = market_config['sp500']['undervalued_threshold']
-VIX_HIGH = market_config['vix']['high_threshold']
+market_config_json = config.get('data_generation', 'market_conditions')
+SP500_OVERVALUED = market_config_json['sp500']['overvalued_threshold']
+SP500_UNDERVALUED = market_config_json['sp500']['undervalued_threshold']
+VIX_HIGH = market_config_json['vix']['high_threshold']
 
 ########################################
 #### Test Data Quality
@@ -55,8 +84,7 @@ def analyze_generated_data():
     Inspect synthesized training data from data_generator.py
     """
 
-    generator = FinancialDataGenerator()
-    data = generator.generate_complete_dataset(N_TEST_RUNS)
+    data = dataset_generator.generate_complete_dataset(N_TEST_RUNS)
 
     print("=== DATA QUALITY ANALYSIS ===")
     print(f"Dataset shape: {data.shape}")
@@ -178,9 +206,9 @@ def analyze_generated_data():
     print(f"\n=== DATA DISTRIBUTION VALIDATION ===")
     
     # Check debt prevalence matches config
-    debt_config = config.get('data_generation', 'debt')
-    expected_cc_rate = debt_config['credit_card']['probability']
-    expected_mortgage_rate = debt_config['mortgage']['probability']
+    debt_config_json = config.get('data_generation', 'debt')
+    expected_cc_rate = debt_config_json['credit_card']['probability']
+    expected_mortgage_rate = debt_config_json['mortgage']['probability']
     
     actual_cc_rate = (data['cc_debt'] > NO_DEBT).mean()
     actual_mortgage_rate = (data['mortgage_debt'] > NO_DEBT).mean()

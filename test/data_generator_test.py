@@ -6,8 +6,37 @@ import os
 import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.data_generator import FinancialDataGenerator
 from src.config import config
+from src.generators.financial_dataset_generator import FinancialDatasetGenerator
+from src.generators.market_data_generator import SP500MarketDataGenerator
+from src.generators.personal_profile_generator import StandardPersonalProfileGenerator
+from src.calculators.investment_strategy_calculator import OptimalInvestmentStrategyCalculator
+from src.factories.config_factory import ConfigFactory
+
+########################################
+#### Setup Generators
+########################################
+
+# Create configurations
+market_config = ConfigFactory.create_market_config()
+general_config = ConfigFactory.create_general_config()
+personal_config = ConfigFactory.create_personal_config()
+debt_config = ConfigFactory.create_debt_config()
+strategy_config = ConfigFactory.create_strategy_config()
+
+# Create generators (Dependency Injection)
+market_generator = SP500MarketDataGenerator(market_config, general_config.default_seed)
+personal_generator = StandardPersonalProfileGenerator(
+    personal_config, debt_config, general_config, general_config.default_seed
+)
+strategy_calculator = OptimalInvestmentStrategyCalculator(
+    strategy_config, general_config, market_config
+)
+
+# Create main dataset generator
+dataset_generator = FinancialDatasetGenerator(
+    market_generator, personal_generator, strategy_calculator
+)
 
 ########################################
 #### Load Test Configuration
@@ -21,18 +50,17 @@ HIGH_INCOME_THRESHOLD = config.get('data_generation', 'personal_profile', 'incom
 N_SAMPLES = 100
 
 # Investment strategy thresholds for categorization
-strategy_config = config.get('data_generation', 'investment_strategy', 'allocation_ratios')
-CONSERVATIVE_THRESHOLD = strategy_config['conservative']
-MODERATE_THRESHOLD = strategy_config['moderate'] 
-GROWTH_THRESHOLD = strategy_config['growth']
-AGGRESSIVE_THRESHOLD = strategy_config['aggressive']
+strategy_config_json = config.get('data_generation', 'investment_strategy', 'allocation_ratios')
+CONSERVATIVE_THRESHOLD = strategy_config_json['conservative']
+MODERATE_THRESHOLD = strategy_config_json['moderate'] 
+GROWTH_THRESHOLD = strategy_config_json['growth']
+AGGRESSIVE_THRESHOLD = strategy_config_json['aggressive']
 
 ########################################
 #### Test generate market conditions
 ########################################
 print("========== MARKET CONDITIONS ==========")
-generator = FinancialDataGenerator()
-market_data = generator.generate_market_conditions(N_SAMPLES)
+market_data = market_generator.generate(N_SAMPLES)
 print(market_data.head())
 print(market_data.describe())
 
@@ -50,7 +78,7 @@ print(f"VIX - Max: {market_data['vix'].max():.2f} (Config max: {vix_config['max'
 #### Test generate personal profiles
 ########################################
 print("\n========== PERSONAL PROFILES ==========")
-personal_data = generator.generate_personal_profiles(N_SAMPLES)
+personal_data = personal_generator.generate(N_SAMPLES)
 print(personal_data.head())
 
 # Calculate debt statistics
@@ -61,9 +89,9 @@ print(f"% People with credit card debt: {cc_debt_pct:.1f}%")
 print(f"% People with mortgages: {mortgage_debt_pct:.1f}%")
 
 # Validate against config probabilities
-debt_config = config.get('data_generation', 'debt')
-expected_cc_pct = debt_config['credit_card']['probability'] * 100
-expected_mortgage_pct = debt_config['mortgage']['probability'] * 100
+debt_config_json = config.get('data_generation', 'debt')
+expected_cc_pct = debt_config_json['credit_card']['probability'] * 100
+expected_mortgage_pct = debt_config_json['mortgage']['probability'] * 100
 
 print(f"\nExpected vs Actual debt rates:")
 print(f"Credit Card - Expected: {expected_cc_pct}%, Actual: {cc_debt_pct:.1f}%")
@@ -79,11 +107,11 @@ print(f"\nAge range - Min: {personal_data['age'].min()} (Config: {age_config['wo
 print("\n========== OPTIMAL STRATEGY CALCULATION ==========")
 
 # Generate test data
-market_conditions = generator.generate_market_conditions(N_SAMPLES)
-personal_profiles = generator.generate_personal_profiles(N_SAMPLES)
+market_conditions = market_generator.generate(N_SAMPLES)
+personal_profiles = personal_generator.generate(N_SAMPLES)
 
 # Calculate optimal strategies
-optimal_strategies = generator.calculate_optimal_strategy(market_conditions, personal_profiles)
+optimal_strategies = strategy_calculator.calculate(market_conditions, personal_profiles)
 
 print("Optimal Strategy Results:")
 print(optimal_strategies.head())
@@ -159,5 +187,17 @@ if young_mask.any() and old_mask.any():
     print(f"Average investment ratio (young <35): {avg_young_investment:.3f}")
     print(f"Average investment ratio (older >55): {avg_old_investment:.3f}")
     print(f"Age impact: {avg_young_investment - avg_old_investment:.3f} higher for young")
+
+########################################
+#### Test complete dataset generation
+########################################
+print("\n========== COMPLETE DATASET GENERATION ==========")
+
+# Test the complete dataset generation
+complete_dataset = dataset_generator.generate_complete_dataset(N_SAMPLES)
+print(f"Complete dataset shape: {complete_dataset.shape}")
+print(f"Complete dataset columns: {list(complete_dataset.columns)}")
+print("\nComplete dataset sample:")
+print(complete_dataset.head())
 
 print("\n========== TEST COMPLETED ==========")

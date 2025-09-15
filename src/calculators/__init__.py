@@ -1,0 +1,3 @@
+from .investment_strategy_calculator import OptimalInvestmentStrategyCalculator
+
+__all__ = ['OptimalInvestmentStrategyCalculator']

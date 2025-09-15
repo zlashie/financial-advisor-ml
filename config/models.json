@@ -1,21 +1,21 @@
 {
-  "random_forest": {
-    "n_estimators": 100,
-    "max_depth": 10,
-    "min_samples_split": 5,
-    "min_samples_leaf": 2,
-    "n_jobs": -1
-  },
   "neural_network": {
-    "hidden_layer_sizes": [100, 50],
-    "max_iterations": 1000,
+    "hidden_layer_sizes": [100, 50, 25],
+    "max_iterations": 2000,
     "regularization": 0.001,
     "validation_fraction": 0.1,
     "activation": "relu",
     "solver": "adam",
     "learning_rate": "adaptive",
     "early_stopping": true,
-    "patience_iterations": 20
+    "patience_iterations": 50
+  },
+  "random_forest": {
+    "n_estimators": 100,
+    "max_depth": 10,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2,
+    "n_jobs": -1
   },
   "evaluation": {
     "investment_ratio_bounds": {
@@ -29,12 +29,12 @@
     "visualization": {
       "top_features": 15,
       "figure_size": {
-        "width": 10,
-        "height": 6
+        "width": 12,
+        "height": 8
       }
     }
   },
   "fallback_values": {
-    "default": 0
+    "default": 0.0
   }
 }

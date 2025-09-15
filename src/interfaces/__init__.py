@@ -13,6 +13,13 @@ from .feature_engineering_interfaces import (
     FeatureEngineeringPipeline
 )
 
+from. model_interfaces import (
+    IFinancialModel,
+    IModelComparator,
+    IMetricsCalculator,
+    IModelVisualizer
+)
+
 __all__ = [
     'MarketDataGenerator',
     'PersonalProfileGenerator',
@@ -22,5 +29,9 @@ __all__ = [
     'FeaturePreprocessor',
     'FeatureScaler',
     'DatasetSplitter',
-    'FeatureEngineeringPipeline'
+    'FeatureEngineeringPipeline',
+    'IFinancialModel',
+    'IModelComparator',
+    'IMetricsCalculator',
+    'IModelVisualizer'
 ]

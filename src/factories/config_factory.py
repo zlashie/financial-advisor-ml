@@ -8,7 +8,19 @@ from ..models.config_models import (
     StrategyConfig, 
     GeneralConfig
 )
+
 from ..config import config
+
+from ..models import (
+    MarketValuationConfig,
+    DebtAnalysisConfig,
+    DemographicsConfig
+)
+
+from .feature_engineering_factory import (
+    FeatureEngineeringConfig,
+    FinancialConstants
+)
 
 ########################################
 #### Classes
@@ -112,4 +124,33 @@ class ConfigFactory:
             undervalued_boost=valuation_config.get('undervalued_boost', 0.15),
             high_vix_reduction=volatility_config.get('high_vix_reduction', 0.10),
             debt_free_dampening=market_adjustments.get('debt_free_dampening', 0.5)
+        )
+    
+    @staticmethod
+    def create_feature_engineering_config() -> FeatureEngineeringConfig:
+        """Create feature engineering configuration."""
+        config_data = config.get('feature_engineering')
+        
+        market_valuation = MarketValuationConfig(**config_data['market_valuation'])
+        debt_analysis = DebtAnalysisConfig(**config_data['debt_analysis'])
+        demographics = DemographicsConfig(**config_data['demographics'])
+        
+        return FeatureEngineeringConfig(
+            market_valuation=market_valuation,
+            debt_analysis=debt_analysis,
+            demographics=demographics,
+            market_condition_labels=config_data['market_condition_labels'],
+            test_size=config.get('common', 'general', 'test_size'),
+            random_state=config.get('common', 'general', 'random_state')
+        )
+
+    @staticmethod
+    def create_financial_constants() -> FinancialConstants:
+        """Create financial constants."""
+        return FinancialConstants(
+            months_per_year=config.get('common', 'general', 'months_per_year'),
+            no_debt=config.get('common', 'financial_constants', 'no_debt'),
+            no_negative_value=config.get('common', 'financial_constants', 'no_negative_value'),
+            retirement_age=config.get('common', 'financial_constants', 'retirement_age'),
+            working_years=config.get('common', 'financial_constants', 'working_years')
         )

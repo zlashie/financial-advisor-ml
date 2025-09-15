@@ -7,3 +7,7 @@ The application's aim is to help in the decision making on wether or not to pay 
 ## Data Analysis
 The test folder contains testing of various model types to find the best model for the job. Here is an example:
 ![Alt text](data/ML1.png "Model Type Accuracy Test")
+
+## File Structure
+File structure can be listed in terminal using
+Get-ChildItem -Recurse -Name | Where-Object { $_ -match '\.(py|yaml|yml)$' -and $_ -notmatch '^venv\\' } | Sort-Object

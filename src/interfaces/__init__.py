@@ -1,4 +1,3 @@
-# src/interfaces/__init__.py
 from .data_generator_interfaces import (
     MarketDataGenerator,
     PersonalProfileGenerator, 
@@ -6,9 +5,22 @@ from .data_generator_interfaces import (
     DatasetGenerator
 )
 
+from .feature_engineering_interfaces import (
+    FeatureCreator,
+    FeaturePreprocessor,
+    FeatureScaler,
+    DatasetSplitter,
+    FeatureEngineeringPipeline
+)
+
 __all__ = [
     'MarketDataGenerator',
     'PersonalProfileGenerator',
     'StrategyCalculator', 
-    'DatasetGenerator'
+    'DatasetGenerator',
+    'FeatureCreator',
+    'FeaturePreprocessor',
+    'FeatureScaler',
+    'DatasetSplitter',
+    'FeatureEngineeringPipeline'
 ]

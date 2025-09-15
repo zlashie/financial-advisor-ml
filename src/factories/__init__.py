@@ -1,3 +1,12 @@
-from .config_factory import ConfigFactory
+from .config_factory import (
+    ConfigFactory
+)
 
-__all__ = ['ConfigFactory']
+from .feature_engineering_factory import (
+    FeatureEngineeringFactory
+)
+
+__all__ = [
+    'ConfigFactory',
+    'FeatureEngineeringFactory'
+]

@@ -1,4 +1,3 @@
-# src/models/__init__.py
 from .config_models import (
     MarketConfig,
     PersonalConfig,
@@ -7,10 +6,23 @@ from .config_models import (
     GeneralConfig
 )
 
+from .feature_engineering_models import (
+    MarketValuationConfig,
+    DebtAnalysisConfig,
+    DemographicsConfig,
+    FeatureEngineeringConfig,
+    FinancialConstants
+)
+
 __all__ = [
     'MarketConfig',
     'PersonalConfig', 
     'DebtConfig',
     'StrategyConfig',
-    'GeneralConfig'
+    'GeneralConfig',
+    'MarketValuationConfig',
+    'DebtAnalysisConfig',
+    'DemographicsConfig',
+    'FeatureEngineeringConfig',
+    'FinancialConstants'
 ]

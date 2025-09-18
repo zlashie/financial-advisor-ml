@@ -583,15 +583,24 @@ def analyze_feature_correlations(X_train, y_train):
     """
     print("\n=== FEATURE CORRELATION ANALYSIS ===")
     
-    # Calculate correlations with target
-    correlations = X_train.corrwith(y_train).sort_values(key=abs, ascending=False)
+    # Separate numerical and categorical columns
+    numerical_columns = X_train.select_dtypes(include=[np.number]).columns
+    categorical_columns = X_train.select_dtypes(exclude=[np.number]).columns
     
-    print("Top 10 features by correlation with investment ratio:")
+    print(f"Analyzing {len(numerical_columns)} numerical features")
+    if len(categorical_columns) > 0:
+        print(f"Excluding {len(categorical_columns)} categorical features: {list(categorical_columns)}")
+    
+    # Calculate correlations with target using only numerical features
+    X_numerical = X_train[numerical_columns]
+    correlations = X_numerical.corrwith(y_train).sort_values(key=abs, ascending=False)
+    
+    print("\nTop 10 numerical features by correlation with investment ratio:")
     for i, (feature, corr) in enumerate(correlations.head(10).items(), 1):
         print(f"  {i:2d}. {feature}: {corr:+.3f}")
     
-    # Check for high inter-feature correlations
-    feature_corr_matrix = X_train.corr()
+    # Check for high inter-feature correlations (numerical features only)
+    feature_corr_matrix = X_numerical.corr()
     high_corr_pairs = []
     
     for i in range(len(feature_corr_matrix.columns)):
@@ -610,6 +619,12 @@ def analyze_feature_correlations(X_train, y_train):
             print(f"  {feat1} ↔ {feat2}: {corr:+.3f}")
     else:
         print("\n✓ No problematic high inter-feature correlations found")
+    
+    # Summary statistics
+    print(f"\nCorrelation summary:")
+    print(f"  Strongest positive correlation: {correlations.max():+.3f}")
+    print(f"  Strongest negative correlation: {correlations.min():+.3f}")
+    print(f"  Mean absolute correlation: {correlations.abs().mean():.3f}")
 
 def test_dependency_injection():
     """Test that dependency injection works correctly."""

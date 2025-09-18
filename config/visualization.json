@@ -1,0 +1,53 @@
+{
+  "plots": {
+    "show_plots": true,
+    "save_plots": false,
+    "save_directory": "visualizations",
+    "subplot_width": 5,
+    "subplot_height": 5,
+    "reference_line_range": [0, 1],
+    "feature_importance_error": "Model {model} does not support feature importance",
+    "feature_importance_xlabel": "Feature Importance",
+    "feature_importance_title": "{model} - Top {n} Feature Importances",
+    "predictions_xlabel": "Actual Investment Ratio",
+    "predictions_ylabel": "Predicted Investment Ratio",
+    "no_training_history_message": "Model {model} does not support training history visualization",
+    "training_history_title": "{model} Training Loss",
+    "training_history_xlabel": "Iteration",
+    "training_history_ylabel": "Loss",
+    "convergence_label": "Converged at iteration {iteration}",
+    "no_convergence_title": "{model} Training Loss (Did not converge)",
+    "plotting_error_message": "Error plotting training history: {error}"
+  },
+  "styling": {
+    "dpi": 300,
+    "bar_color": "steelblue",
+    "scatter_alpha": 0.6,
+    "scatter_color": "blue",
+    "line_color": "blue",
+    "reference_line_color": "red",
+    "reference_line_style": "--",
+    "reference_line_width": 2,
+    "convergence_line_color": "red",
+    "convergence_line_style": "--",
+    "grid_enabled": true,
+    "font_size": {
+      "title": 14,
+      "label": 12,
+      "tick": 10
+    },
+    "color_palette": {
+      "primary": "#1f77b4",
+      "secondary": "#ff7f0e",
+      "success": "#2ca02c",
+      "warning": "#d62728",
+      "info": "#9467bd"
+    }
+  },
+  "figure_defaults": {
+    "width": 12,
+    "height": 8,
+    "tight_layout": true,
+    "transparent_background": false
+  }
+}

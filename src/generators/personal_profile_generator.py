@@ -41,10 +41,10 @@ class StandardPersonalProfileGenerator(PersonalProfileGenerator):
                 self.income_config['normal_distribution']['stddev']
             )
             
-            # Credit card debt
+            #### Credit card debt ####
             cc_debt, cc_rate = self._generate_credit_card_debt()
             
-            # Mortgage debt
+            #### Mortgage debt ####
             mortgage_debt, mortgage_rate = self._generate_mortgage_debt(age, monthly_income)
             
             monthly_discretionary = monthly_income * np.random.uniform(

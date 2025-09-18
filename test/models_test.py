@@ -559,8 +559,6 @@ def test_all_models():
     else:
         print("✗ SOME MODELS FAILED VALIDATION - CHECK RESULTS ABOVE")
     
-    print("✓ NEW ARCHITECTURE TESTING COMPLETE")
-    
     return models, results_df, X_test, y_test, validation_results
 
 if __name__ == "__main__":

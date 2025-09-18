@@ -34,6 +34,65 @@
       }
     }
   },
+  "validation": {
+    "min_prediction": 0,
+    "max_prediction": 1,
+    "trained_attribute": "is_trained",
+    "min_training_samples": 100,
+    "max_missing_ratio": 0.1,
+    "min_feature_variance": 1e-6,
+    "min_prediction_diversity": 10
+  },
+  "comparison": {
+    "training_header": "=== TRAINING ALL MODELS ===",
+    "evaluation_header": "=== EVALUATING ALL MODELS ===",
+    "results_header": "=== MODEL COMPARISON RESULTS ===",
+    "training_message": "Training {model}...",
+    "evaluation_message": "Evaluating {model}...",
+    "best_model_message": "Best performing model: {model}",
+    "best_score_message": "Test {metric} Score: {score:.4f}",
+    "metrics": {
+      "r2": {
+        "train_col": "Train_R2",
+        "test_col": "Test_R2"
+      },
+      "mae": {
+        "train_col": "Train_MAE",
+        "test_col": "Test_MAE"
+      },
+      "rmse": {
+        "train_col": "Train_RMSE",
+        "test_col": "Test_RMSE"
+      }
+    },
+    "overfitting_column": "Overfitting",
+    "primary_metric": "r2",
+    "sort_ascending": false,
+    "decimal_places": 4
+  },
+  "metrics": {
+    "enabled_metrics": ["r2", "mae", "rmse", "mean_prediction", "mape"],
+    "calculate_valid_prediction_rate": true,
+    "calculate_financial_metrics": true,
+    "calculate_risk_metrics": true,
+    "prediction_tolerance": 0.05,
+    "conservative_threshold": 0.3,
+    "aggressive_threshold": 0.7,
+    "enable_cv_metrics": true,
+    "custom_metrics": {
+      "weighted_mae": {
+        "enabled": false,
+        "type": "weighted_mae",
+        "extreme_threshold": 0.8,
+        "extreme_weight": 2.0
+      },
+      "directional_accuracy": {
+        "enabled": false,
+        "type": "directional_accuracy",
+        "baseline": 0.5
+      }
+    }
+  },
   "fallback_values": {
     "default": 0.0
   }

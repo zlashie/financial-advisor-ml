@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import RobustScaler
 from ..interfaces.feature_engineering_interfaces import FeatureScaler
+from ..config import config
 
 ########################################
 #### Classes
@@ -18,11 +19,13 @@ class RobustFeatureScaler(FeatureScaler):
         self.scaler = None
         self.feature_columns = None
         self._is_fitted = False
+        
+        #### Load exclusion columns from config ####
+        self.exclusion_columns = config.get('feature_engineering', 'pipeline', 'feature_column_exclusions')
     
     def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Fit scaler and transform features."""
-        feature_cols = [col for col in df.columns 
-                       if col not in ['recommended_investment_ratio', 'expected_return']]
+        feature_cols = [col for col in df.columns if col not in self.exclusion_columns]
         numerical_cols = df[feature_cols].select_dtypes(include=[np.number]).columns.tolist()
         
         df_scaled = df.copy()

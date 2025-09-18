@@ -3,6 +3,49 @@
     "target_column": "recommended_investment_ratio",
     "feature_column_exclusions": ["recommended_investment_ratio"]
   },
+  "preprocessing": {
+    "categorical_columns": ["age_group", "income_group", "market_condition"],
+    "drop_first_category": true
+  },
+  "debt_features": {
+    "debt_columns": ["cc_debt", "mortgage_debt"],
+    "rate_columns": ["cc_rate", "mortgage_rate"],
+    "income_multiplier": 12,
+    "create_debt_service_ratio": true,
+    "monthly_payment_rate": 0.02
+  },
+  "market_features": {
+    "pe_column": "sp500_pe",
+    "vix_column": "vix",
+    "treasury_column": "treasury_yield",
+    "attractiveness_column": "market_attractiveness",
+    "create_risk_premium": true,
+    "base_market_return": 0.10,
+    "create_volatility_categories": true,
+    "vix_categories": {
+      "low": 15,
+      "high": 30
+    }
+  },
+  "risk_features": {
+    "age_column": "age",
+    "income_column": "monthly_income",
+    "discretionary_column": "monthly_discretionary",
+    "retirement_age": 65,
+    "working_years": 40,
+    "create_age_risk_categories": true,
+    "age_risk_thresholds": {
+      "young": 35,
+      "middle": 50
+    },
+    "create_financial_stability_score": true,
+    "stability_weights": {
+      "discretionary_ratio": 0.4,
+      "risk_capacity": 0.6
+    },
+    "create_liquidity_features": true,
+    "emergency_fund_months": 6
+  },
   "market_valuation": {
     "price_scoring": {
       "expensive": -1,

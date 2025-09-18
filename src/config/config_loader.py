@@ -32,7 +32,8 @@ class ConfigLoader:
             'data_generation': 'data_generation.json', 
             'feature_engineering': 'feature_engineering.json',
             'models': 'models.json',
-            'paths': 'paths.json'
+            'paths': 'paths.json',
+            'visualization': 'visualization.json'
         }
         
         for config_name, filename in config_files.items():
@@ -75,7 +76,8 @@ class ConfigLoader:
             'data_generation': 'data_generation.json',
             'feature_engineering': 'feature_engineering.json', 
             'models': 'models.json',
-            'paths': 'paths.json'
+            'paths': 'paths.json',
+            'visualization': 'visualization.json'
         }
         
         if config_type in config_files:

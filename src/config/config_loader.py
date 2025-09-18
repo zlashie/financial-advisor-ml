@@ -1,5 +1,5 @@
 ########################################
-#### Dependendencies
+#### Dependencies
 ########################################
 import json
 import os
@@ -31,7 +31,8 @@ class ConfigLoader:
             'common': 'common.json',
             'data_generation': 'data_generation.json', 
             'feature_engineering': 'feature_engineering.json',
-            'models': 'models.json'
+            'models': 'models.json',
+            'paths': 'paths.json'
         }
         
         for config_name, filename in config_files.items():
@@ -51,6 +52,7 @@ class ConfigLoader:
         Examples:
         - config.get('common', 'general', 'default_seed')
         - config.get('data_generation', 'market_conditions', 'sp500', 'mean')
+        - config.get('paths', 'data', 'base_directory')
         """
         try:
             config = self._configs[config_type]
@@ -72,7 +74,8 @@ class ConfigLoader:
             'common': 'common.json',
             'data_generation': 'data_generation.json',
             'feature_engineering': 'feature_engineering.json', 
-            'models': 'models.json'
+            'models': 'models.json',
+            'paths': 'paths.json'
         }
         
         if config_type in config_files:

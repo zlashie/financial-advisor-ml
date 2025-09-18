@@ -1,0 +1,25 @@
+{
+  "data": {
+    "base_directory": "data",
+    "processed_directory": "data/processed",
+    "models_directory": "models",
+    "training_files": {
+      "X_train": "X_train.csv",
+      "X_test": "X_test.csv", 
+      "y_train": "y_train.csv",
+      "y_test": "y_test.csv"
+    },
+    "preprocessing_state_file": "preprocessing_state.joblib"
+  },
+  "models": {
+    "save_directory": "models",
+    "file_extensions": {
+      "model": ".joblib",
+      "csv": ".csv"
+    }
+  },
+  "visualization": {
+    "output_directory": "visualizations",
+    "file_formats": ["png", "pdf"]
+  }
+}

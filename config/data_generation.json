@@ -90,7 +90,10 @@
       "risk_divisor": 40,
       "min_age_factor": 0.6
     },
-    "income_boost_multiplier": 1.15,
+    "income_boost": {
+      "threshold": 100000,
+      "multiplier": 1.15
+    },
     "market_adjustments": {
       "valuation_impact": {
         "overvalued_reduction": 0.15,

@@ -1,10 +1,11 @@
 ########################################
-#### Dependendencies
+#### Dependencies
 ########################################
 import numpy as np
 import pandas as pd
 from ..interfaces.data_generator_interfaces import PersonalProfileGenerator
 from ..models.config_models import PersonalConfig, DebtConfig, GeneralConfig
+from ..config import config
 
 ########################################
 #### Classes
@@ -16,6 +17,13 @@ class StandardPersonalProfileGenerator(PersonalProfileGenerator):
         self.personal_config = personal_config
         self.debt_config = debt_config
         self.general_config = general_config
+        
+        self.age_config = config.get_section('data_generation', 'personal_profile')['age']
+        self.income_config = config.get_section('data_generation', 'personal_profile')['income']
+        self.cc_debt_config = config.get_section('data_generation', 'debt')['credit_card']
+        self.mortgage_config = config.get_section('data_generation', 'debt')['mortgage']
+        self.common_config = config.get_section('common', 'general')
+        
         if random_seed is not None:
             np.random.seed(random_seed)
     
@@ -25,12 +33,12 @@ class StandardPersonalProfileGenerator(PersonalProfileGenerator):
         
         for _ in range(n_samples):
             age = np.random.randint(
-                self.personal_config.work_age_min, 
-                self.personal_config.work_age_max
+                self.age_config['work_min'], 
+                self.age_config['work_max']
             )
             monthly_income = np.random.lognormal(
-                self.personal_config.monthly_income_mean, 
-                self.personal_config.monthly_income_stddev
+                self.income_config['normal_distribution']['mean'], 
+                self.income_config['normal_distribution']['stddev']
             )
             
             # Credit card debt
@@ -40,8 +48,8 @@ class StandardPersonalProfileGenerator(PersonalProfileGenerator):
             mortgage_debt, mortgage_rate = self._generate_mortgage_debt(age, monthly_income)
             
             monthly_discretionary = monthly_income * np.random.uniform(
-                self.personal_config.monthly_income_dis_min,
-                self.personal_config.monthly_income_dis_max
+                self.income_config['discretionary']['min'],
+                self.income_config['discretionary']['max']
             )
             
             personal_data.append({
@@ -58,14 +66,14 @@ class StandardPersonalProfileGenerator(PersonalProfileGenerator):
     
     def _generate_credit_card_debt(self) -> tuple[float, float]:
         """Generate credit card debt data."""
-        if np.random.random() < self.debt_config.cc_debt_probability:
+        if np.random.random() < self.cc_debt_config['probability']:
             debt = np.random.lognormal(
-                self.debt_config.cc_debt_mean, 
-                self.debt_config.cc_debt_stddev
+                self.cc_debt_config['normal_distribution']['mean'], 
+                self.cc_debt_config['normal_distribution']['stddev']
             )
             rate = np.random.uniform(
-                self.debt_config.cc_rate_min, 
-                self.debt_config.cc_rate_max
+                self.cc_debt_config['rate']['min'], 
+                self.cc_debt_config['rate']['max']
             )
             return debt, rate
         return self.general_config.no_debt, self.general_config.no_rate
@@ -73,20 +81,20 @@ class StandardPersonalProfileGenerator(PersonalProfileGenerator):
     def _generate_mortgage_debt(self, age: int, monthly_income: float) -> tuple[float, float]:
         """Generate mortgage debt data."""
         has_mortgage = (
-            age > self.personal_config.mortgage_debt_age_min and 
-            np.random.random() < self.debt_config.mortgage_debt_probability
+            age > self.age_config['mortgage_debt_min'] and 
+            np.random.random() < self.mortgage_config['probability']
         )
         
         if has_mortgage:
-            mortgage_debt = monthly_income * self.general_config.months_per_year * np.random.uniform(
-                self.debt_config.mortgage_income_min, 
-                self.debt_config.mortgage_income_max
+            mortgage_debt = monthly_income * self.common_config['months_per_year'] * np.random.uniform(
+                self.mortgage_config['income_multiple']['min'], 
+                self.mortgage_config['income_multiple']['max']
             )
-            max_mortgage = monthly_income * self.general_config.months_per_year * self.debt_config.mortgage_income_cap
+            max_mortgage = monthly_income * self.common_config['months_per_year'] * self.mortgage_config['income_multiple']['cap']
             mortgage_debt = min(mortgage_debt, max_mortgage)
             mortgage_rate = np.random.uniform(
-                self.debt_config.mortgage_rate_min, 
-                self.debt_config.mortgage_rate_max
+                self.mortgage_config['rate']['min'], 
+                self.mortgage_config['rate']['max']
             )
             return mortgage_debt, mortgage_rate
         

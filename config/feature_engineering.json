@@ -1,4 +1,8 @@
 {
+  "pipeline": {
+    "target_column": "recommended_investment_ratio",
+    "feature_column_exclusions": ["recommended_investment_ratio"]
+  },
   "market_valuation": {
     "price_scoring": {
       "expensive": -1,

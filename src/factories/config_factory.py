@@ -1,5 +1,5 @@
 ########################################
-#### Dependendencies
+#### Dependencies
 ########################################
 from ..models.config_models import (
     MarketConfig, 
@@ -101,6 +101,7 @@ class ConfigFactory:
         market_adjustments = strategy_config.get('market_adjustments', {})
         valuation_config = market_adjustments.get('valuation_impact', {})
         volatility_config = market_adjustments.get('volatility_impact', {})
+        income_boost_config = strategy_config.get('income_boost', {})
         
         return StrategyConfig(
             return_base=returns_config['base'],
@@ -117,7 +118,7 @@ class ConfigFactory:
             debt_rate_medium=debt_thresholds['medium'],
             age_risk_divisor=age_adjustments['risk_divisor'],
             min_age_factor=age_adjustments['min_age_factor'],
-            income_boost_multiplier=strategy_config['income_boost_multiplier'],
+            income_boost_multiplier=income_boost_config.get('multiplier', 1.15),
             min_investment_ratio=bounds_config['min_investment_ratio'],
             max_investment_ratio=bounds_config['max_investment_ratio'],
             overvalued_reduction=valuation_config.get('overvalued_reduction', 0.15),

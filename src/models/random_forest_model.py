@@ -10,6 +10,7 @@ from .base_financial_model import BaseFinancialModel
 from ..services.metrics_service import FinancialMetricsCalculator
 from ..services.model_validation_service import ModelValidationService
 from ..models.model_config_models import RandomForestConfig
+from ..config import config
 
 ########################################
 #### Classes
@@ -18,10 +19,13 @@ from ..models.model_config_models import RandomForestConfig
 class RandomForestModel(BaseFinancialModel):
     """Random Forest for financial decision prediction"""
     
-    def __init__(self, config: RandomForestConfig, metrics_calculator: FinancialMetricsCalculator, 
+    def __init__(self, config_model: RandomForestConfig, metrics_calculator: FinancialMetricsCalculator, 
                  validation_service: ModelValidationService):
         super().__init__("Random Forest", metrics_calculator, validation_service)
-        self._config = config
+        self._config = config_model
+        
+        #### Load random forest configuration ####
+        self.rf_config = config.get_section('models', 'random_forest')
     
     def _create_model(self) -> RandomForestRegressor:
         """Create Random Forest Model"""
@@ -37,7 +41,8 @@ class RandomForestModel(BaseFinancialModel):
     def get_feature_importance(self, feature_names: List[str]) -> pd.DataFrame:
         """Get feature importance from Random Forest"""
         if not self._validation_service.is_model_trained(self):
-            raise ValueError("Model not trained yet!")
+            error_message = self.rf_config.get('feature_importance_error', 'Model not trained yet!')
+            raise ValueError(error_message)
         
         importance_df = pd.DataFrame({
             'feature': feature_names,

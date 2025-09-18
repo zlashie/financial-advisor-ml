@@ -10,6 +10,7 @@ from sklearn.linear_model import LinearRegression
 from .base_financial_model import BaseFinancialModel
 from ..services.metrics_service import FinancialMetricsCalculator
 from ..services.model_validation_service import ModelValidationService
+from ..config import config
 
 ########################################
 #### Classes
@@ -21,15 +22,20 @@ class LinearRegressionModel(BaseFinancialModel):
     def __init__(self, metrics_calculator: FinancialMetricsCalculator, 
                  validation_service: ModelValidationService):
         super().__init__("Linear Regression", metrics_calculator, validation_service)
+        
+        #### Load linear regression configuration ####
+        self.lr_config = config.get_section('models', 'linear_regression')
     
     def _create_model(self) -> LinearRegression:
         """Create Linear Regression Model"""
-        return LinearRegression(fit_intercept=True)
+        fit_intercept = self.lr_config.get('fit_intercept', True)
+        return LinearRegression(fit_intercept=fit_intercept)
     
     def get_feature_importance(self, feature_names: List[str]) -> pd.DataFrame:
         """Get feature coefficients"""
         if not self._validation_service.is_model_trained(self):
-            raise ValueError("Model not trained yet!")
+            error_message = self.lr_config.get('feature_importance_error', 'Model not trained yet!')
+            raise ValueError(error_message)
         
         importance_df = pd.DataFrame({
             'feature': feature_names,
@@ -42,7 +48,8 @@ class LinearRegressionModel(BaseFinancialModel):
     def interpret_prediction(self, X_sample: pd.DataFrame, feature_names: List[str]) -> Dict:
         """Explain how a prediction was made"""
         if not self._validation_service.is_model_trained(self):
-            raise ValueError("Model not trained yet!")
+            error_message = self.lr_config.get('interpretation_error', 'Model not trained yet!')
+            raise ValueError(error_message)
         
         prediction = self.predict(X_sample)[0]
         feature_contributions = X_sample.iloc[0] * self.model.coef_

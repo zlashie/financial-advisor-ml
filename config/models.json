@@ -1,4 +1,22 @@
 {
+  "base_model": {
+    "training_message": "Training {model}...",
+    "completion_message": "{model} training complete!",
+    "r2_message": "Training R²: {r2:.4f}",
+    "not_trained_error": "{model} not trained yet!",
+    "results_header": "\n{model} Test Results:",
+    "r2_result": "R² Score: {r2:.4f}",
+    "mae_result": "MAE: {mae:.4f}",
+    "rmse_result": "RMSE: {rmse:.4f}",
+    "save_untrained_error": "Cannot save untrained model",
+    "save_message": "{model} saved to {filepath}",
+    "load_message": "{model} loaded from {filepath}"
+  },
+  "linear_regression": {
+    "fit_intercept": true,
+    "feature_importance_error": "Model not trained yet!",
+    "interpretation_error": "Model not trained yet!"
+  },
   "neural_network": {
     "hidden_layer_sizes": [100, 50, 25],
     "max_iterations": 2000,
@@ -8,14 +26,19 @@
     "solver": "adam",
     "learning_rate": "adaptive",
     "early_stopping": true,
-    "patience_iterations": 50
+    "patience_iterations": 50,
+    "learning_rate_init": 0.001,
+    "tolerance": 1e-4,
+    "scaler_error": "Scaler not fitted!",
+    "history_error": "Model not trained yet!"
   },
   "random_forest": {
     "n_estimators": 100,
     "max_depth": 10,
     "min_samples_split": 5,
     "min_samples_leaf": 2,
-    "n_jobs": -1
+    "n_jobs": -1,
+    "feature_importance_error": "Model not trained yet!"
   },
   "evaluation": {
     "investment_ratio_bounds": {

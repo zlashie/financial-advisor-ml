@@ -1,0 +1,41 @@
+<h2>ML Debt & Investment Advisor</h2>
+
+<div class="form-section">
+  <h3>Debt</h3>
+  <div *ngFor="let debt of debts; let i = index">
+    <input type="number" [(ngModel)]="debt.amount" placeholder="Debt amount">
+    <input type="number" [(ngModel)]="debt.apr" placeholder="Debt Rate (e.g. 0.05)">
+  </div>
+  <button (click)="addDebt()">+ Add Debt</button>
+</div>
+
+<div class="form-section">
+  <h3>Investments</h3>
+  <input type="number" [(ngModel)]="investments.equity_value" placeholder="Index ETFs (Equity)">
+  <input type="number" [(ngModel)]="investments.property_value" placeholder="Property Market Value">
+  <input type="number" [(ngModel)]="investments.property_growth_rate" placeholder="Property Growth Rate (e.g. 0.02)">
+  <input type="number" [(ngModel)]="investments.equity_return_rate" placeholder="Equity Return Rate (e.g. 0.08)">
+</div>
+
+<div class="form-section">
+  <h3>Time Horizon</h3>
+  <input type="number" [(ngModel)]="horizon_years" placeholder="Years">
+</div>
+
+<div class="form-section">
+  <h3>Monthly Potential</h3>
+  <input type="number" [(ngModel)]="monthly_extra" placeholder="Amount to invest">
+</div>
+
+<button (click)="calculate()">Calculate</button>
+
+<hr>
+
+<div *ngIf="result">
+  <h3>Results</h3>
+  <p><b>To Debt:</b> {{ result.allocation.to_debt }}</p>
+  <p><b>To Investing:</b> {{ result.allocation.to_investing }}</p>
+
+  <h4>Projections</h4>
+  <pre>{{ result.projections | json }}</pre>
+</div>

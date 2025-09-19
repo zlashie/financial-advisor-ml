@@ -1,0 +1,10 @@
+com\fa\api\dto\Debt.class
+com\fa\api\config\WebClientConfig.class
+com\fa\api\dto\AllocationResponse.class
+com\fa\api\dto\RecommendationRequest.class
+com\fa\api\dto\RecommendationResponse.class
+com\fa\api\controller\RecommendationController.class
+com\fa\api\dto\ProjectionResponse.class
+com\fa\api\ApiApplication.class
+com\fa\api\dto\Investments.class
+com\fa\api\controller\PingController.class

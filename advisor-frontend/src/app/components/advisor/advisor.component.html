@@ -1,41 +1,49 @@
 <h2>ML Debt & Investment Advisor</h2>
 
-<div class="form-section">
-  <h3>Debt</h3>
-  <div *ngFor="let debt of debts; let i = index">
-    <input type="number" [(ngModel)]="debt.amount" placeholder="Debt amount">
-    <input type="number" [(ngModel)]="debt.apr" placeholder="Debt Rate (e.g. 0.05)">
+<section>
+  <h3>Debts</h3>
+  <div *ngFor="let d of debts; let i = index" class="row">
+    <input type="number" [(ngModel)]="d.amount" placeholder="Amount" />
+    <input type="number" step="0.001" [(ngModel)]="d.apr" placeholder="APR (0..1)" />
+    <button (click)="removeDebt(i)" [disabled]="debts.length===1">Remove</button>
   </div>
-  <button (click)="addDebt()">+ Add Debt</button>
-</div>
+  <button (click)="addDebt()">+ Add debt</button>
+</section>
 
-<div class="form-section">
+<section>
   <h3>Investments</h3>
-  <input type="number" [(ngModel)]="investments.equity_value" placeholder="Index ETFs (Equity)">
-  <input type="number" [(ngModel)]="investments.property_value" placeholder="Property Market Value">
-  <input type="number" [(ngModel)]="investments.property_growth_rate" placeholder="Property Growth Rate (e.g. 0.02)">
-  <input type="number" [(ngModel)]="investments.equity_return_rate" placeholder="Equity Return Rate (e.g. 0.08)">
-</div>
+  <input type="number" [(ngModel)]="investments.equity_value" placeholder="Equity value" />
+  <input type="number" [(ngModel)]="investments.property_value" placeholder="Property value" />
+  <input type="number" step="0.001" [(ngModel)]="investments.property_growth_rate" placeholder="Property growth rate (yr)" />
+  <input type="number" step="0.001" [(ngModel)]="investments.equity_return_rate" placeholder="Equity return rate (yr)" />
+</section>
 
-<div class="form-section">
-  <h3>Time Horizon</h3>
-  <input type="number" [(ngModel)]="horizon_years" placeholder="Years">
-</div>
+<section class="row">
+  <div>
+    <h3>Time horizon</h3>
+    <input type="number" [(ngModel)]="horizon_years" />
+  </div>
+  <div>
+    <h3>Monthly surplus</h3>
+    <input type="number" [(ngModel)]="monthly_extra" />
+  </div>
+</section>
 
-<div class="form-section">
-  <h3>Monthly Potential</h3>
-  <input type="number" [(ngModel)]="monthly_extra" placeholder="Amount to invest">
-</div>
+<button (click)="calculate()" [disabled]="loading">Calculate</button>
+<p *ngIf="loading">Calculating…</p>
+<p *ngIf="error" style="color:#c00">{{error}}</p>
 
-<button (click)="calculate()">Calculate</button>
+<hr />
 
-<hr>
+<div *ngIf="result as r">
+  <h3>Recommended split</h3>
+  <p>To Debt: <b>{{r.allocation.to_debt | number:'1.0-2'}}</b> —
+     To Investing: <b>{{r.allocation.to_investing | number:'1.0-2'}}</b>
+     (ratio {{r.allocation.ratio | number:'1.0-2'}})</p>
 
-<div *ngIf="result">
-  <h3>Results</h3>
-  <p><b>To Debt:</b> {{ result.allocation.to_debt }}</p>
-  <p><b>To Investing:</b> {{ result.allocation.to_investing }}</p>
+  <h4>Explain</h4>
+  <ul><li *ngFor="let e of r.explain">{{e}}</li></ul>
 
-  <h4>Projections</h4>
-  <pre>{{ result.projections | json }}</pre>
+  <h4>Projections (raw)</h4>
+  <pre style="max-height:240px;overflow:auto">{{r.projections | json}}</pre>
 </div>

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf, DecimalPipe, JsonPipe } from '@angular/common';  // ⟵ add DecimalPipe, JsonPipe
 import {
   RecommendationService,
   Debt,
@@ -9,9 +9,13 @@ import {
 } from '../../services/recommendation.service';
 
 @Component({
-  selector: 'app-advisor',
+  selector: 'app-root',
   standalone: true,
-  imports: [FormsModule, NgFor, NgIf],
+  imports: [
+    FormsModule,
+    NgFor, NgIf,
+    DecimalPipe, JsonPipe    
+  ],
   templateUrl: './advisor.component.html',
   styleUrls: ['./advisor.component.css']
 })
@@ -28,10 +32,12 @@ export class AdvisorComponent {
 
   result: any = null;
   loading = false;
+  error: string | null = null;
 
   constructor(private recommendationService: RecommendationService) {}
 
   addDebt() { this.debts.push({ amount: 0, apr: 0 }); }
+  removeDebt(i: number) { if (this.debts.length > 1) this.debts.splice(i, 1); }
 
   calculate() {
     const payload: RecommendationRequest = {
@@ -41,9 +47,10 @@ export class AdvisorComponent {
       monthly_extra: this.monthly_extra
     };
     this.loading = true;
+    this.error = null;
     this.recommendationService.getRecommendation(payload).subscribe({
       next: res => this.result = res,
-      error: err => console.error('Error fetching recommendation', err),
+      error: err => { console.error(err); this.error = 'Request failed'; },
       complete: () => this.loading = false
     });
   }

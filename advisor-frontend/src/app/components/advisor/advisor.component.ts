@@ -5,6 +5,7 @@ import { RecommendationService, Debt, Investments, RecommendationRequest } from 
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions, ChartType, Plugin } from 'chart.js';
 import { Chart, registerables } from 'chart.js';
+import { ViewChild } from '@angular/core';
 Chart.register(...registerables);
 
 @Component({
@@ -15,15 +16,17 @@ Chart.register(...registerables);
   styleUrls: ['./advisor.component.css']
 })
 export class AdvisorComponent {
+  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+
   // ---- form model ----
-  debts: Debt[] = [{ amount: 0, apr: 0 }];
+  debts: Debt[] = [{ amount: 0, apr: 4 }];
   investments: Investments = {
     equity_value: 0,
     property_value: 0,
-    property_growth_rate: 0.02,
-    equity_return_rate: 0.08
+    property_growth_rate: 4,
+    equity_return_rate: 8
   };
-  horizon_years = 10;
+  horizon_years = 20;
   monthly_extra = 1000;
 
   // ---- state ----
@@ -80,22 +83,52 @@ export class AdvisorComponent {
   addDebt() { this.debts.push({ amount: 0, apr: 0 }); }
   removeDebt(i: number) { if (this.debts.length > 1) this.debts.splice(i, 1); }
 
+  private normalizeRate(r: number): number {
+    if (r == null || isNaN(r as any)) return 0;
+    return r > 1 ? r / 100 : r;
+  }
+
   calculate() {
-    const payload: RecommendationRequest = {
-      debts: this.debts,
-      investments: this.investments,
-      horizon_years: this.horizon_years,
-      monthly_extra: this.monthly_extra
+    const debtsNorm = this.debts.map(d => ({
+      amount: Number(d.amount) || 0,
+      apr: this.normalizeRate(Number(d.apr))
+    }));
+
+    const inv = {
+      equity_value: Number(this.investments.equity_value) || 0,
+      property_value: Number(this.investments.property_value) || 0,
+      property_growth_rate: this.normalizeRate(Number(this.investments.property_growth_rate)),
+      equity_return_rate: this.normalizeRate(Number(this.investments.equity_return_rate))
     };
+
+    const anyBadApr = debtsNorm.some(d => d.apr < -0.5 || d.apr > 1.0);
+    const badEquity = inv.equity_return_rate < -0.5 || inv.equity_return_rate > 1.0;
+    const badProp   = inv.property_growth_rate < -0.5 || inv.property_growth_rate > 1.0;
+    const badHorizon = this.horizon_years < 1 || this.horizon_years > 60;
+
+    if (anyBadApr || badEquity || badProp || badHorizon) {
+      this.error = 'One or more inputs are out of range. Use 0–1 for rates (or 0–100%, we convert). Horizon 1–60.';
+      return;
+    }
+
+    const payload: RecommendationRequest = {
+      debts: debtsNorm,
+      investments: inv,
+      horizon_years: Number(this.horizon_years),
+      monthly_extra: Number(this.monthly_extra) || 0
+    };
+
     this.loading = true;
     this.error = null;
+
     this.svc.getRecommendation(payload).subscribe({
       next: (res) => {
         this.result = res;
+
         const years = res.projections.years;
         const assets = res.projections.assets_pos;
-        const debt = res.projections.debt_neg;        
-        const net = res.projections.net_worth ?? assets.map((a: number, idx: number) => a + debt[idx]);
+        const debt = res.projections.debt_neg; 
+        const net = res.projections.net_worth ?? assets.map((a: number, i: number) => a + debt[i]);
 
         this.lineChartData = {
           labels: years,
@@ -105,6 +138,7 @@ export class AdvisorComponent {
             { ...this.lineChartData.datasets[2], data: net }
           ]
         };
+        this.chart?.update();
       },
       error: () => this.error = 'Request failed',
       complete: () => this.loading = false

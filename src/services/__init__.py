@@ -14,9 +14,24 @@ from .model_comparison_service import (
     ModelComparisonService
 )
 
+from .inference_api import (
+    Debt, 
+    Investments, 
+    RecommendationRequest,
+    Allocation,
+    Projections,
+    RecommendationResponse
+)
+
 __all__ = [
     'FinancialMetricsCalculator',
     'ModelValidationService',
     'ModelVisualizationService',
-    'ModelComparisonService'
+    'ModelComparisonService',
+    'Debt',
+    'Investments',
+    'RecommendationRequest',
+    'Allocation',
+    'Projections',
+    'RecommendationResponse'
 ]

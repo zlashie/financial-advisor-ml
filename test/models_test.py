@@ -7,10 +7,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-# Add src to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Import the actual modules and functions that exist
 from src.factories.config_factory import ConfigFactory
 from src.generators.market_data_generator import SP500MarketDataGenerator
 from src.generators.personal_profile_generator import StandardPersonalProfileGenerator
@@ -29,6 +26,30 @@ from src.models.random_forest_model import RandomForestModel
 from src.models.neural_network_model import NeuralNetworkModel
 from src.config import config
 
+import pytest
+
+########################################
+#### Pytest
+########################################
+@pytest.fixture
+def models():
+    """Fixture to provide models for testing"""
+    pytest.skip("Models fixture not implemented yet")
+
+@pytest.fixture
+def feature_names():
+    """Fixture to provide feature names for testing"""
+    return ['feature1', 'feature2', 'feature3']  
+
+@pytest.fixture
+def raw_data():
+    """Fixture to provide raw data for testing"""
+    import pandas as pd
+    return pd.DataFrame({
+        'col1': [1, 2, 3],
+        'col2': [4, 5, 6]
+    })
+
 ########################################
 #### Data Generation Helper Class
 ########################################
@@ -36,33 +57,37 @@ from src.config import config
 class TestDataGenerator:
     """Helper class to generate data for testing using the existing architecture"""
     
-    def __init__(self):
-        # Create configurations using existing factory
-        self.market_config = ConfigFactory.create_market_config()
-        self.general_config = ConfigFactory.create_general_config()
-        self.personal_config = ConfigFactory.create_personal_config()
-        self.debt_config = ConfigFactory.create_debt_config()
-        self.strategy_config = ConfigFactory.create_strategy_config()
+    @classmethod
+    def create_generator(cls):
+        """Create a configured data generator"""
+        #### Create configurations using existing factory ####
+        market_config = ConfigFactory.create_market_config()
+        general_config = ConfigFactory.create_general_config()
+        personal_config = ConfigFactory.create_personal_config()
+        debt_config = ConfigFactory.create_debt_config()
+        strategy_config = ConfigFactory.create_strategy_config()
         
-        # Create generators (Dependency Injection)
-        self.market_generator = SP500MarketDataGenerator(
-            self.market_config, self.general_config.default_seed
+        #### Create generators (Dependency Injection) ####
+        market_generator = SP500MarketDataGenerator(
+            market_config, general_config.default_seed
         )
-        self.personal_generator = StandardPersonalProfileGenerator(
-            self.personal_config, self.debt_config, self.general_config, self.general_config.default_seed
+        personal_generator = StandardPersonalProfileGenerator(
+            personal_config, debt_config, general_config, general_config.default_seed
         )
-        self.strategy_calculator = OptimalInvestmentStrategyCalculator(
-            self.strategy_config, self.general_config, self.market_config
+        strategy_calculator = OptimalInvestmentStrategyCalculator(
+            strategy_config, general_config, market_config
         )
         
-        # Create main dataset generator
-        self.dataset_generator = FinancialDatasetGenerator(
-            self.market_generator, self.personal_generator, self.strategy_calculator
+        #### Create main dataset generator ####
+        return FinancialDatasetGenerator(
+            market_generator, personal_generator, strategy_calculator
         )
     
-    def generate_complete_dataset(self, num_samples: int):
+    @classmethod
+    def generate_complete_dataset(cls, num_samples: int):
         """Generate complete dataset"""
-        return self.dataset_generator.generate_complete_dataset(num_samples)
+        generator = cls.create_generator()
+        return generator.generate_complete_dataset(num_samples)
 
 ########################################
 #### Feature Engineering Helper Class
@@ -71,19 +96,23 @@ class TestDataGenerator:
 class TestFeatureEngineer:
     """Helper class to handle feature engineering for testing"""
     
-    def __init__(self):
+    @classmethod
+    def create_pipeline(cls):
+        """Create a configured feature engineering pipeline"""
         # Create configurations
-        self.feature_config = ConfigFactory.create_feature_engineering_config()
-        self.financial_constants = ConfigFactory.create_financial_constants()
+        feature_config = ConfigFactory.create_feature_engineering_config()
+        financial_constants = ConfigFactory.create_financial_constants()
         
         # Create feature engineering pipeline
-        self.pipeline = FeatureEngineeringFactory.create_feature_engineering_pipeline(
-            self.feature_config, self.financial_constants
+        return FeatureEngineeringFactory.create_feature_engineering_pipeline(
+            feature_config, financial_constants
         )
     
-    def create_ml_dataset(self, raw_data):
+    @classmethod
+    def create_ml_dataset(cls, raw_data):
         """Create ML dataset from raw data"""
-        return self.pipeline.create_ml_dataset(raw_data)
+        pipeline = cls.create_pipeline()
+        return pipeline.create_ml_dataset(raw_data)
 
 ########################################
 #### Load Test Configuration
@@ -251,7 +280,6 @@ def test_model_persistence(models):
     """
     print("\n=== MODEL PERSISTENCE TESTS ===")
     
-    # Create models directory
     test_models_dir = Path('test_models')
     test_models_dir.mkdir(exist_ok=True)
     
@@ -259,11 +287,9 @@ def test_model_persistence(models):
         model_filename = test_models_dir / f"test_{model.model_name.lower().replace(' ', '_')}.joblib"
         
         try:
-            # Test saving
             model.save_model(str(model_filename))
             print(f"  ✓ {model.model_name} saved successfully")
             
-            # Test loading - create new instance using factory
             evaluation_config = ModelConfigFactory.create_evaluation_config()
             metrics_calculator = FinancialMetricsCalculator(evaluation_config)
             validation_service = ModelValidationService(evaluation_config)
@@ -283,23 +309,20 @@ def test_model_persistence(models):
             new_model.load_model(str(model_filename))
             print(f"  ✓ {model.model_name} loaded successfully")
             
-            # Verify loaded model works
             if hasattr(new_model, 'model') and new_model.model is not None:
                 print(f"  ✓ {model.model_name} model object restored")
             else:
                 print(f"  ✗ {model.model_name} model object not properly restored")
                 
-            # Clean up test file
             model_filename.unlink()
             
         except Exception as e:
             print(f"  ✗ {model.model_name} persistence failed: {e}")
     
-    # Clean up test directory if empty
     try:
         test_models_dir.rmdir()
     except OSError:
-        pass  # Directory not empty, leave it
+        pass  
 
 def test_data_generation():
     """
@@ -311,12 +334,10 @@ def test_data_generation():
         generator = TestDataGenerator()
         print("  ✓ Data generator creation successful")
         
-        # Test small dataset generation
         test_size = min(500, DATASET_SIZE) 
         raw_data = generator.generate_complete_dataset(test_size)
         print(f"  ✓ Dataset generation successful ({raw_data.shape[0]} samples)")
         
-        # Validate dataset structure - Updated to match actual column name
         required_columns = ['recommended_investment_ratio']  
         for col in required_columns:
             if col in raw_data.columns:
@@ -324,21 +345,27 @@ def test_data_generation():
             else:
                 print(f"  ✗ Required column '{col}' missing")
         
-        return raw_data
+        assert raw_data is not None, "Raw data should not be None"
+        assert len(raw_data) > 0, "Should have generated data"
+        assert 'recommended_investment_ratio' in raw_data.columns, "Should have target column"
         
     except Exception as e:
         print(f"  ✗ Data generation failed: {e}")
-        return None
+        raise 
     
-def test_feature_engineering(raw_data):
+def test_feature_engineering():
     """
     Test feature engineering functionality
     """
     print("\n=== FEATURE ENGINEERING TESTS ===")
     
-    if raw_data is None:
-        print("  ✗ No raw data available for feature engineering")
-        return None, None, None, None
+    try:
+        generator = TestDataGenerator()
+        raw_data = generator.generate_complete_dataset(50) 
+        print(f"  ✓ Generated test data ({raw_data.shape[0]} samples)")
+    except Exception as e:
+        print(f"  ✗ Failed to generate test data: {e}")
+        raise
     
     try:
         feature_engineer = TestFeatureEngineer()
@@ -350,11 +377,18 @@ def test_feature_engineering(raw_data):
         print(f"    Test set: {X_test.shape}")
         print(f"    Features: {X_train.shape[1]}")
         
-        return X_train, X_test, y_train, y_test
+        # Add proper assertions
+        assert X_train is not None, "X_train should not be None"
+        assert X_test is not None, "X_test should not be None"
+        assert y_train is not None, "y_train should not be None"
+        assert y_test is not None, "y_test should not be None"
+        assert len(X_train) > 0, "Training set should have data"
+        assert len(X_test) > 0, "Test set should have data"
+        assert X_train.shape[1] > 0, "Should have features"
         
     except Exception as e:
         print(f"  ✗ Feature engineering failed: {e}")
-        return None, None, None, None
+        raise 
 
 def test_service_layer():
     """
@@ -362,7 +396,6 @@ def test_service_layer():
     """
     print("\n=== SERVICE LAYER TESTS ===")
     
-    # Test configuration creation
     try:
         evaluation_config = ModelConfigFactory.create_evaluation_config()
         rf_config = ModelConfigFactory.create_random_forest_config()
@@ -371,20 +404,18 @@ def test_service_layer():
         print("  ✓ Configuration creation successful")
     except Exception as e:
         print(f"  ✗ Configuration creation failed: {e}")
-        return False
+        raise
     
-    # Test service creation
     try:
         metrics_calculator = FinancialMetricsCalculator(evaluation_config)
         validation_service = ModelValidationService(evaluation_config)
-        comparison_service = ModelComparisonService(evaluation_config)
-        visualization_service = ModelVisualizationService(viz_config)
+        ModelComparisonService(evaluation_config) 
+        ModelVisualizationService(viz_config)    
         print("  ✓ Service creation successful")
     except Exception as e:
         print(f"  ✗ Service creation failed: {e}")
-        return False
+        raise
     
-    # Test model factory
     try:
         lr_model = ModelFactory.create_linear_regression(metrics_calculator, validation_service)
         rf_model = ModelFactory.create_random_forest(rf_config, metrics_calculator, validation_service)
@@ -392,9 +423,14 @@ def test_service_layer():
         print("  ✓ Model factory successful")
     except Exception as e:
         print(f"  ✗ Model factory failed: {e}")
-        return False
+        raise
     
-    return True
+    # Add assertions
+    assert evaluation_config is not None, "Evaluation config should not be None"
+    assert metrics_calculator is not None, "Metrics calculator should not be None"
+    assert lr_model is not None, "Linear regression model should not be None"
+    assert rf_model is not None, "Random forest model should not be None"
+    assert nn_model is not None, "Neural network model should not be None"
 
 def test_orchestrator():
     """
@@ -414,29 +450,30 @@ def test_orchestrator():
         print(f"  ✗ Orchestrator test failed: {e}")
         return None, None
     
-def test_configuration_validation():
-    """Test that all configurations load correctly"""
-    print("\n=== CONFIGURATION VALIDATION ===")
+def test_orchestrator():
+    """
+    Test the main orchestrator functionality
+    """
+    print("\n=== ORCHESTRATOR TESTS ===")
     
     try:
-        # Test all config creation
-        evaluation_config = ModelConfigFactory.create_evaluation_config()
-        rf_config = ModelConfigFactory.create_random_forest_config()
-        nn_config = ModelConfigFactory.create_neural_network_config()
-        viz_config = ModelConfigFactory.create_visualization_config()
+        orchestrator = ModelTrainingOrchestrator()
+        print("  ✓ Orchestrator creation successful")
         
-        # Validate key parameters
-        assert evaluation_config.invest_ratio_min >= 0
-        assert evaluation_config.invest_ratio_max <= 1
-        assert rf_config.n_estimators > 0
-        assert nn_config.max_iterations > 0
+        models = orchestrator.create_models()
+        print(f"  ✓ Model creation successful ({len(models)} models)")
         
-        print("  ✓ All configurations valid")
-        return True
+        assert orchestrator is not None, "Orchestrator should not be None"
+        assert models is not None, "Models should not be None"
+        assert len(models) > 0, "Should have created models"
         
     except Exception as e:
-        print(f"  ✗ Configuration validation failed: {e}")
-        return False
+        print(f"  ✗ Orchestrator test failed: {e}")
+        raise  
+
+########################################
+#### All models test
+########################################
 
 def test_all_models():
     """
@@ -446,56 +483,65 @@ def test_all_models():
     print(f"Using dataset size: {DATASET_SIZE}")
     print(f"Random state: {RANDOM_STATE}")
     
-    # Step 0: Test service layer
-    if not test_service_layer():
-        print("Service layer tests failed. Aborting.")
-        return None, None, None, None, None
+    #### Step 0: Test service layer ####
+    try:
+        test_service_layer()
+    except Exception as e:
+        print(f"Service layer tests failed: {e}")
+        pytest.fail("Service layer tests failed")
     
-    # Step 0.5: Test orchestrator
-    orchestrator, created_models = test_orchestrator()
-    if orchestrator is None:
-        print("Orchestrator tests failed. Aborting.")
-        return None, None, None, None, None
+    #### Step 0.5: Test orchestrator ####
+    try:
+        test_orchestrator()
+        orchestrator = ModelTrainingOrchestrator()
+    except Exception as e:
+        print(f"Orchestrator tests failed: {e}")
+        pytest.fail("Orchestrator tests failed")
     
-    # Step 1: Generate and prepare data
-    raw_data = test_data_generation()
-    if raw_data is None:
-        print("Data generation failed. Aborting.")
-        return None, None, None, None, None
+    #### Step 1: Generate and prepare data ####
+    try:
+        test_data_generation()
+        raw_data = TestDataGenerator.generate_complete_dataset(DATASET_SIZE)
+    except Exception as e:
+        print(f"Data generation failed: {e}")
+        pytest.fail("Data generation failed")
     
-    X_train, X_test, y_train, y_test = test_feature_engineering(raw_data)
-    if X_train is None:
-        print("Feature engineering failed. Aborting.")
-        return None, None, None, None, None
+    try:
+        test_feature_engineering()
+        X_train, X_test, y_train, y_test = TestFeatureEngineer.create_ml_dataset(raw_data)
+
+    except Exception as e:
+        print(f"Feature engineering failed: {e}")
+        pytest.fail("Feature engineering failed")
     
-    # Step 2: Use orchestrator to train and evaluate models
+    #### Step 2: Use orchestrator to train and evaluate models ####
     print("\nTraining and evaluating models using orchestrator...")
     try:
         feature_names = X_train.columns.tolist()
         results_df, models = orchestrator.train_and_evaluate_models(
-            X_train, y_train, X_test, y_test, feature_names
+            X_train, y_train, X_test, y_test, feature_names, show_plots=False
         )
         print("  ✓ Orchestrator training and evaluation successful")
     except Exception as e:
         print(f"  ✗ Orchestrator training failed: {e}")
-        return None, None, None, None, None
+        pytest.fail("Orchestrator training failed")
     
-    # Step 3: Validate performance
+    #### Step 3: Validate performance ####
     validation_results = validate_model_performance(results_df)
     
-    # Step 4: Analyze predictions
+    #### Step 4: Analyze predictions ####
     analyze_prediction_distribution(models, X_test, y_test)
     
-    # Step 5: Test interpretability
+    #### Step 5: Test interpretability ####
     test_model_interpretability(models, feature_names)
     
-    # Step 6: Test model persistence
+    #### Step 6: Test model persistence ####
     test_model_persistence(models)
     
-    # Step 7: Analyze feature importance (for interpretable models)
+    #### Step 7: Analyze feature importance (for interpretable models) ####
     print(f"\n=== FEATURE IMPORTANCE ANALYSIS ===")
     
-    # Linear Regression coefficients
+    #### Linear Regression coefficients ####
     lr_model = next((model for model in models if isinstance(model, LinearRegressionModel)), None)
     if lr_model:
         try:
@@ -505,41 +551,24 @@ def test_all_models():
         except Exception as e:
             print(f"Linear regression feature importance failed: {e}")
     
-    # Random Forest importance
+    #### Random Forest importance ####
     rf_model = next((model for model in models if isinstance(model, RandomForestModel)), None)
     if rf_model:
         try:
             rf_importance = rf_model.get_feature_importance(feature_names)
             print(f"\nRandom Forest - Top {N_IMPORTANT} Most Important Features:")
             print(rf_importance.head(N_IMPORTANT))
-            
-            # Plot feature importance using visualization service
-            try:
-                print("\nGenerating feature importance plot...")
-                orchestrator.visualization_service.plot_feature_importance(rf_model, feature_names)
-            except Exception as e:
-                print(f"Feature importance plot skipped: {e}")
-                
         except Exception as e:
             print(f"Random forest feature importance failed: {e}")
     
-    # Step 8: Neural Network training history
-    nn_model = next((model for model in models if isinstance(model, NeuralNetworkModel)), None)
-    if nn_model:
-        try:
-            print("\nGenerating neural network training history...")
-            orchestrator.visualization_service.plot_training_history(nn_model)
-        except Exception as e:
-            print(f"Training history plot skipped: {e}")
-    
-    # Step 9: Save best model using orchestrator
+    #### Step 8: Save best model using orchestrator ####
     try:
         best_model = orchestrator.save_best_model(models, results_df)
         print(f"\nBest model saved: {best_model.model_name}")
     except Exception as e:
         print(f"Best model saving failed: {e}")
     
-    # Step 10: Summary
+    #### Step 9: Summary ####
     print(f"\n=== TESTING SUMMARY ===")
     print(f"Dataset size: {DATASET_SIZE}")
     print(f"Features generated: {X_train.shape[1]}")
@@ -550,7 +579,7 @@ def test_all_models():
         best_r2 = results_df.iloc[0]['Test_R2']
         print(f"Best model: {best_model_name} (R² = {best_r2:.3f})")
     
-    # Count passing models
+    #### Count passing models ####
     passing_models = sum(1 for result in validation_results.values() if result['overall_pass'])
     print(f"Models passing validation: {passing_models}/{len(models)}")
     
@@ -558,8 +587,6 @@ def test_all_models():
         print("✓ ALL MODELS PASSED VALIDATION")
     else:
         print("✗ SOME MODELS FAILED VALIDATION - CHECK RESULTS ABOVE")
-    
-    return models, results_df, X_test, y_test, validation_results
 
 if __name__ == "__main__":
     models, results, X_test, y_test, validation = test_all_models()

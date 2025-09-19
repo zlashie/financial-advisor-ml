@@ -14,6 +14,15 @@ from src.generators.financial_dataset_generator import FinancialDatasetGenerator
 from src.generators.market_data_generator import SP500MarketDataGenerator
 from src.generators.personal_profile_generator import StandardPersonalProfileGenerator
 from src.calculators.investment_strategy_calculator import OptimalInvestmentStrategyCalculator
+from src.feature_engineering.debt_feature_creator import DebtFeatureCreator
+from src.feature_engineering.market_feature_creator import MarketFeatureCreator
+from src.feature_engineering.risk_feature_creator import RiskFeatureCreator
+from src.feature_engineering.categorical_feature_preprocessor import CategoricalFeaturePreprocessor
+from src.feature_engineering.robust_feature_scaler import RobustFeatureScaler
+from src.interfaces.feature_engineering_interfaces import (
+    FeatureCreator, FeaturePreprocessor, FeatureScaler, 
+    DatasetSplitter, FeatureEngineeringPipeline
+)
 from src.config import config
 
 ########################################
@@ -103,11 +112,9 @@ def test_debt_feature_creator():
     
     from src.feature_engineering.debt_feature_creator import DebtFeatureCreator
     debt_creator = DebtFeatureCreator(feature_config.debt_analysis, financial_constants)
-    
-    # Test feature creation
+   
     df_with_debt_features = debt_creator.create_features(raw_data)
     
-    # Validate debt features
     expected_debt_features = [
         'total_debt', 'annual_income', 'debt_to_income_ratio', 
         'weighted_debt_rate', 'debt_urgency'
@@ -119,11 +126,9 @@ def test_debt_feature_creator():
         else:
             print(f"   ✗ {feature} missing!")
     
-    # Validate debt-to-income calculation
     sample_idx = 0
     original_cc_debt = raw_data.iloc[sample_idx]['cc_debt']
     original_mortgage_debt = raw_data.iloc[sample_idx]['mortgage_debt']
-    original_monthly_income = raw_data.iloc[sample_idx]['monthly_income']
     
     expected_total_debt = original_cc_debt + original_mortgage_debt
     actual_total_debt = df_with_debt_features.iloc[sample_idx]['total_debt']
@@ -132,27 +137,31 @@ def test_debt_feature_creator():
         print("   ✓ Total debt calculation correct")
     else:
         print(f"   ✗ Total debt calculation incorrect: expected {expected_total_debt}, got {actual_total_debt}")
+
+    assert df_with_debt_features is not None, "Debt features should not be None"
+    assert len(df_with_debt_features) > 0, "Should have debt feature data"
     
-    return df_with_debt_features
+    for feature in expected_debt_features:
+        assert feature in df_with_debt_features.columns, f"Missing expected feature: {feature}"
+    
+    assert abs(expected_total_debt - actual_total_debt) < 0.01, "Total debt calculation should be correct"
+    
+    print("   ✓ All debt feature assertions passed")
 
 def test_market_feature_creator():
     """Test market feature creation."""
     print("\n=== TESTING MARKET FEATURE CREATOR ===")
     
-    # Create test data
     data_generator = create_test_data_generator()
     raw_data = data_generator.generate_complete_dataset(10)
     
-    # Create market feature creator
     feature_config = ConfigFactory.create_feature_engineering_config()
     
     from src.feature_engineering.market_feature_creator import MarketFeatureCreator
     market_creator = MarketFeatureCreator(feature_config.market_valuation)
     
-    # Test feature creation
     df_with_market_features = market_creator.create_features(raw_data)
     
-    # Validate market features
     expected_market_features = ['market_attractiveness']
     
     for feature in expected_market_features:
@@ -161,12 +170,10 @@ def test_market_feature_creator():
         else:
             print(f"   ✗ {feature} missing!")
     
-    # Validate market attractiveness calculation
     sample_idx = 0
     sample_pe = raw_data.iloc[sample_idx]['sp500_pe']
     sample_vix = raw_data.iloc[sample_idx]['vix']
     
-    # Calculate expected scores manually
     if sample_pe > pe_thresholds['fair_value_max']:
         expected_pe_score = market_config['price_scoring']['expensive']
     elif sample_pe < pe_thresholds['fair_value_min']:
@@ -189,26 +196,30 @@ def test_market_feature_creator():
     else:
         print(f"   ✗ Market attractiveness calculation incorrect: expected {expected_market_score}, got {actual_market_score}")
     
-    return df_with_market_features
+    assert df_with_market_features is not None, "Market features should not be None"
+    assert len(df_with_market_features) > 0, "Should have market feature data"
+    
+    for feature in expected_market_features:
+        assert feature in df_with_market_features.columns, f"Missing expected feature: {feature}"
+    
+    assert abs(expected_market_score - actual_market_score) < 0.01, "Market attractiveness calculation should be correct"
+    
+    print("   ✓ All market feature assertions passed")
 
 def test_risk_feature_creator():
     """Test risk feature creation."""
     print("\n=== TESTING RISK FEATURE CREATOR ===")
     
-    # Create test data
     data_generator = create_test_data_generator()
     raw_data = data_generator.generate_complete_dataset(10)
     
-    # Create risk feature creator
     financial_constants = ConfigFactory.create_financial_constants()
     
     from src.feature_engineering.risk_feature_creator import RiskFeatureCreator
     risk_creator = RiskFeatureCreator(financial_constants)
     
-    # Test feature creation
     df_with_risk_features = risk_creator.create_features(raw_data)
     
-    # Validate risk features
     expected_risk_features = ['years_to_retirement', 'risk_capacity', 'discretionary_ratio']
     
     for feature in expected_risk_features:
@@ -217,7 +228,6 @@ def test_risk_feature_creator():
         else:
             print(f"   ✗ {feature} missing!")
     
-    # Validate risk capacity calculation
     sample_idx = 0
     sample_age = raw_data.iloc[sample_idx]['age']
     expected_years_to_retirement = max(0, RETIREMENT_AGE - sample_age)
@@ -231,26 +241,27 @@ def test_risk_feature_creator():
     else:
         print(f"   ✗ Risk capacity calculation incorrect: expected {expected_risk_capacity:.3f}, got {actual_risk_capacity:.3f}")
     
-    return df_with_risk_features
+    assert df_with_risk_features is not None, "Risk features should not be None"
+    assert len(df_with_risk_features) > 0, "Should have risk feature data"
+    
+    for feature in expected_risk_features:
+        assert feature in df_with_risk_features.columns, f"Missing expected feature: {feature}"
+    
+    assert abs(expected_risk_capacity - actual_risk_capacity) < 0.01, "Risk capacity calculation should be correct"
+    assert abs(expected_years_to_retirement - actual_years_to_retirement) < 0.01, "Years to retirement calculation should be correct"
+    
+    print("   ✓ All risk feature assertions passed")
 
 def test_categorical_preprocessor():
     """Test categorical feature preprocessing."""
     print("\n=== TESTING CATEGORICAL PREPROCESSOR ===")
     
-    # Create test data with engineered features
     data_generator = create_test_data_generator()
     raw_data = data_generator.generate_complete_dataset(10)
     
-    # Create all feature creators and apply them
     feature_config = ConfigFactory.create_feature_engineering_config()
     financial_constants = ConfigFactory.create_financial_constants()
     
-    from src.feature_engineering.debt_feature_creator import DebtFeatureCreator
-    from src.feature_engineering.market_feature_creator import MarketFeatureCreator
-    from src.feature_engineering.risk_feature_creator import RiskFeatureCreator
-    from src.feature_engineering.categorical_feature_preprocessor import CategoricalFeaturePreprocessor
-    
-    # Apply all feature creators
     debt_creator = DebtFeatureCreator(feature_config.debt_analysis, financial_constants)
     market_creator = MarketFeatureCreator(feature_config.market_valuation)
     risk_creator = RiskFeatureCreator(financial_constants)
@@ -260,17 +271,14 @@ def test_categorical_preprocessor():
     df_engineered = market_creator.create_features(df_engineered)
     df_engineered = risk_creator.create_features(df_engineered)
     
-    # Create categorical preprocessor
     preprocessor = CategoricalFeaturePreprocessor(
         feature_config.demographics,
         feature_config.market_valuation,
         feature_config.market_condition_labels
     )
     
-    # Test preprocessing
     df_processed = preprocessor.prepare_features(df_engineered)
     
-    # Check for categorical encodings
     categorical_features = [col for col in df_processed.columns 
                           if any(x in col for x in ['age_group_', 'income_group_', 'market_condition_'])]
     
@@ -282,46 +290,27 @@ def test_categorical_preprocessor():
         print("   ✓ Categorical encoding completed successfully")
     else:
         print("   ✗ No categorical encodings found")
-    
-    return df_processed
 
 def test_feature_scaler():
     """Test feature scaling."""
     print("\n=== TESTING FEATURE SCALER ===")
     
-    # Create test data
     data_generator = create_test_data_generator()
     raw_data = data_generator.generate_complete_dataset(100)
     
-    # Create and apply all preprocessing steps
     pipeline = create_test_feature_pipeline()
     
-    # Get processed data before scaling
-    from src.feature_engineering.debt_feature_creator import DebtFeatureCreator
-    from src.feature_engineering.market_feature_creator import MarketFeatureCreator
-    from src.feature_engineering.risk_feature_creator import RiskFeatureCreator
-    from src.feature_engineering.categorical_feature_preprocessor import CategoricalFeaturePreprocessor
-    from src.feature_engineering.robust_feature_scaler import RobustFeatureScaler
-    
-    feature_config = ConfigFactory.create_feature_engineering_config()
-    financial_constants = ConfigFactory.create_financial_constants()
-    
-    # Apply feature creators
     df_processed = raw_data.copy()
     for creator in pipeline.feature_creators:
         df_processed = creator.create_features(df_processed)
     
-    # Apply preprocessing
     df_processed = pipeline.feature_preprocessor.prepare_features(df_processed)
     
-    # Separate features and target
     feature_cols = [col for col in df_processed.columns if col != 'recommended_investment_ratio']
     X = df_processed[feature_cols]
     
-    # Test scaling
     scaler = RobustFeatureScaler()
     
-    # Test fit_transform
     X_scaled = scaler.fit_transform(X)
     
     if scaler.is_fitted():
@@ -329,18 +318,16 @@ def test_feature_scaler():
     else:
         print("   ✗ Scaler not fitted")
     
-    # Check scaling results
     numerical_cols = X_scaled.select_dtypes(include=['float64', 'int64']).columns
     
     print("   Checking scaled feature statistics:")
     all_scaled_properly = True
     
-    for col in numerical_cols[:5]:  # Check first 5 numerical columns
+    for col in numerical_cols[:5]: 
         mean_val = X_scaled[col].mean()
         std_val = X_scaled[col].std()
         print(f"     {col}: mean={mean_val:.3f}, std={std_val:.3f}")
         
-        # RobustScaler should center around median (close to 0), reasonable std
         if abs(mean_val) > 2 or std_val > 10:
             all_scaled_properly = False
     
@@ -349,14 +336,11 @@ def test_feature_scaler():
     else:
         print("   ✗ Some features may not be properly scaled")
     
-    # Test transform on new data
     try:
-        X_new_scaled = scaler.transform(X.iloc[:10])  # Transform first 10 rows
+        scaler.transform(X.iloc[:10])  
         print("   ✓ Transform on new data successful")
     except Exception as e:
         print(f"   ✗ Transform on new data failed: {e}")
-    
-    return X_scaled
 
 ########################################
 #### Main Feature Engineering Test
@@ -368,15 +352,12 @@ def test_feature_engineering():
     """
     print("=== TESTING FEATURE ENGINEERING PIPELINE ===")
     
-    # Create test data using new architecture
     data_generator = create_test_data_generator()
     raw_data = data_generator.generate_complete_dataset(N_TEST_RUNS)
     print(f"Generated {raw_data.shape[0]} samples with {raw_data.shape[1]} features")
     
-    # Create feature engineering pipeline
     pipeline = create_test_feature_pipeline()
     
-    # Test individual components first
     print("\n=== TESTING INDIVIDUAL COMPONENTS ===")
     test_debt_feature_creator()
     test_market_feature_creator()
@@ -384,7 +365,6 @@ def test_feature_engineering():
     test_categorical_preprocessor()
     test_feature_scaler()
     
-    # Test complete pipeline
     print("\n=== TESTING COMPLETE PIPELINE ===")
     X_train, X_test, y_train, y_test = pipeline.create_ml_dataset(raw_data)
 
@@ -400,7 +380,6 @@ def test_feature_engineering():
 
     print("\n=== DATA QUALITY CHECKS ===")
     
-    # Check for missing values
     train_missing = X_train.isnull().sum().sum()
     test_missing = X_test.isnull().sum().sum()
     print(f"Training set missing values: {train_missing}")
@@ -411,7 +390,6 @@ def test_feature_engineering():
     else:
         print("✗ FAIL: Missing values found in processed data")
     
-    # Check target variable range
     target_min = y_train.min()
     target_max = y_train.max()
     expected_min = config.get('data_generation', 'investment_strategy', 'bounds', 'min_investment_ratio')
@@ -436,7 +414,6 @@ def test_feature_engineering():
         std_val = X_train[col].std()
         print(f"  {col}: mean={mean_val:.3f}, std={std_val:.3f}")
         
-        # RobustScaler should center around 0, but not necessarily std=1
         if abs(mean_val) > 2 or std_val > 10:  
             all_scaled_properly = False
     
@@ -447,7 +424,6 @@ def test_feature_engineering():
 
     print("\n=== FEATURE ENGINEERING VALIDATION ===")
     
-    # Test debt-to-income calculation
     sample_idx = SAMPLE_IDX
     original_cc_debt = raw_data.iloc[sample_idx]['cc_debt']
     original_mortgage_debt = raw_data.iloc[sample_idx]['mortgage_debt']
@@ -463,12 +439,10 @@ def test_feature_engineering():
         print(f"  Annual income: ${original_annual_income:,.0f}")
         print(f"  Expected ratio: {expected_debt_ratio:.3f}")
     
-    # Test market attractiveness scoring
     print(f"\nMarket attractiveness validation:")
     sample_pe = raw_data.iloc[sample_idx]['sp500_pe']
     sample_vix = raw_data.iloc[sample_idx]['vix']
     
-    # Calculate expected PE score
     if sample_pe > pe_thresholds['fair_value_max']:
         expected_pe_score = market_config['price_scoring']['expensive']
     elif sample_pe < pe_thresholds['fair_value_min']:
@@ -476,7 +450,6 @@ def test_feature_engineering():
     else:
         expected_pe_score = market_config['price_scoring']['fair']
     
-    # Calculate expected VIX score
     if sample_vix > vix_thresholds['balanced_max']:
         expected_vix_score = market_config['psychology_scoring']['fearful']
     elif sample_vix < vix_thresholds['balanced_min']:
@@ -490,7 +463,6 @@ def test_feature_engineering():
     print(f"  VIX: {sample_vix:.1f} → VIX Score: {expected_vix_score}")
     print(f"  Expected market attractiveness: {expected_market_score}")
     
-    # Test age-based risk capacity
     sample_age = raw_data.iloc[sample_idx]['age']
     expected_years_to_retirement = max(0, RETIREMENT_AGE - sample_age)
     expected_risk_capacity = expected_years_to_retirement / WORKING_YEARS
@@ -502,7 +474,6 @@ def test_feature_engineering():
 
     print("\n=== CATEGORICAL ENCODING VALIDATION ===")
     
-    # Check age group encoding
     age_bins = [0, age_groups['young_max'], age_groups['middle_max'], 
                 age_groups['mature_max'], age_groups['senior_max']]
     age_labels = age_groups['labels']
@@ -510,11 +481,9 @@ def test_feature_engineering():
     print(f"Age group bins: {age_bins}")
     print(f"Age group labels: {age_labels}")
     
-    # Check income group encoding
     print(f"Income group percentiles: {income_groups['percentiles']}")
     print(f"Income group labels: {income_groups['labels']}")
     
-    # Verify one-hot encoding worked
     categorical_cols = [col for col in X_train.columns 
                        if any(prefix in col for prefix in ['age_group_', 'income_group_', 'market_condition_'])]
     print(f"One-hot encoded columns: {categorical_cols}")
@@ -526,7 +495,6 @@ def test_feature_engineering():
 
     print("\n=== PREPROCESSING STATE SAVE/LOAD TEST ===")
     
-    # Test saving preprocessing state
     try:
         models_dir = Path('models')
         models_dir.mkdir(exist_ok=True)
@@ -534,13 +502,11 @@ def test_feature_engineering():
         pipeline.save_state(str(models_dir / 'preprocessing_state.joblib'))
         print("✓ PASS: Preprocessing state saved successfully")
         
-        # Test loading
         new_pipeline = create_test_feature_pipeline()
         new_pipeline.load_state(str(models_dir / 'preprocessing_state.joblib'))
         print("✓ PASS: Preprocessing state loaded successfully")
-        
-        # Test that loaded pipeline can transform data
-        X_test_transformed = new_pipeline.feature_scaler.transform(X_test)
+
+        new_pipeline.feature_scaler.transform(X_test)
         print("✓ PASS: Loaded pipeline can transform new data")
         
     except Exception as e:
@@ -548,13 +514,6 @@ def test_feature_engineering():
     
     print(f"\n=== ARCHITECTURE VALIDATION ===")
     
-    # Test that components follow interfaces
-    from src.interfaces.feature_engineering_interfaces import (
-        FeatureCreator, FeaturePreprocessor, FeatureScaler, 
-        DatasetSplitter, FeatureEngineeringPipeline
-    )
-    
-    # Check that pipeline components implement correct interfaces
     interface_checks = [
         (pipeline.feature_creators[0], FeatureCreator, "DebtFeatureCreator"),
         (pipeline.feature_preprocessor, FeaturePreprocessor, "CategoricalFeaturePreprocessor"),
@@ -574,8 +533,6 @@ def test_feature_engineering():
     print(f"Generated {X_train.shape[1]} features from {raw_data.shape[1]} original columns")
     print(f"Data split: {X_train.shape[0]} train, {X_test.shape[0]} test samples")
     print(f"Architecture follows SOLID principles with proper dependency injection")
-    
-    return X_train, X_test, y_train, y_test, pipeline
 
 def analyze_feature_correlations(X_train, y_train):
     """

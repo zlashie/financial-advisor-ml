@@ -59,8 +59,8 @@ class ModelTrainingOrchestrator:
         return models
     
     def train_and_evaluate_models(self, X_train: pd.DataFrame, y_train: pd.Series,
-                                 X_test: pd.DataFrame, y_test: pd.Series,
-                                 feature_names: List[str]):
+                                X_test: pd.DataFrame, y_test: pd.Series,
+                                feature_names: List[str], show_plots: bool = True):
         """Train and evaluate all models"""
         models = self.create_models()
         
@@ -77,10 +77,11 @@ class ModelTrainingOrchestrator:
         #### Compare results ####
         comparison_df = self.comparison_service.compare_results()
         
-        #### Visualizations ####
-        self.visualization_service.plot_predictions_comparison(
-            self.comparison_service.models, X_test, y_test
-        )
+        #### Visualizations (optional) ####
+        if show_plots:
+            self.visualization_service.plot_predictions_comparison(
+                self.comparison_service.models, X_test, y_test
+            )
         
         return comparison_df, models
     

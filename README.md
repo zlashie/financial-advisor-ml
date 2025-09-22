@@ -136,7 +136,49 @@ Training loss curve showing the neural network converged after 94 iterations wit
 
 ---
 
-## Limitations & Future Work
+# How to run layers
+
+
+The system is structured as three layers:
+
+- **Python FastAPI** (inference ML service)
+- **Java Spring Boot** (backend API, orchestrator between Python and Angular)
+- **Angular** (frontend UI with proxy)
+
+---
+
+## How to run the three layers (local dev)
+
+### Prereqs
+- **Python 3.11+** (with `pip`)
+- **Java 17+** and **Maven 3.9+**
+- **Node 18+** (or 20+) and **Angular CLI** (`npm i -g @angular/cli`)
+- Ports used: **8000** (Python), **8080** (Java), **4200** (Angular)
+
+---
+
+### Start the Python inference API (FastAPI)
+Run in root
+```
+ python -m uvicorn src.services.inference_api:app --reload --port 8000
+```
+
+### Start the Spring Boot API 
+CD into root/advisor-api
+
+```
+ mvn -f advisor-api/pom.xml spring-boot:run
+```
+
+
+### Start the Angular Frontend 
+CD into root/advisor-frontend
+```
+ npm start
+```
+
+
+# Limitations & Future Work
 
 - Assumes discretionary funds can be reallocated freely.  
 - Does not yet account for taxes, inflation, or transaction costs.  

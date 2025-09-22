@@ -4,24 +4,40 @@
   <div class="grid">
     <!-- Debts -->
     <section class="card">
-      <h2>Debts</h2>
-      <div *ngFor="let d of debts; let i = index" class="row">
-        <input type="number" [(ngModel)]="d.amount" placeholder="Amount" />
-        <input type="number" step="0.001" [(ngModel)]="d.apr" placeholder="APR (0..1)" />
+    <h2>Debts</h2>
+
+    <div class="debt-rows">
+        <div class="row debt-grid" *ngFor="let d of debts; let i = index">
+        <input type="number" [(ngModel)]="d.amount" placeholder="Debt amount" />
+        <div class="rate-wrap">
+            <input type="number" step="0.001" [(ngModel)]="d.apr" placeholder="Debt rate" />
+            <span class="pct">%</span>
+        </div>
         <button class="link" (click)="removeDebt(i)" [disabled]="debts.length===1">Remove</button>
-      </div>
-      <button class="secondary" (click)="addDebt()">+ Add debt</button>
+        </div>
+    </div>
+
+    <button class="secondary" (click)="addDebt()">+ Add debt</button>
     </section>
 
-    <!-- Investments -->
     <section class="card">
-      <h2>Investments</h2>
-      <div class="row">
-        <input type="number" [(ngModel)]="investments.equity_value" placeholder="Equity value" />
-        <input type="number" [(ngModel)]="investments.property_value" placeholder="Property value" />
+    <h2>Investments</h2>
+
+    <div class="invest-grid">
+        <!-- row 1: values -->
+        <input type="number" [(ngModel)]="investments.equity_value" placeholder="Index ETFs (Equity)" />
+        <input type="number" [(ngModel)]="investments.property_value" placeholder="Property Market Value" />
+
+        <!-- row 2: rates -->
+        <div class="rate-wrap">
         <input type="number" step="0.001" [(ngModel)]="investments.property_growth_rate" placeholder="Property growth (yr)" />
+        <span class="pct">%</span>
+        </div>
+        <div class="rate-wrap">
         <input type="number" step="0.001" [(ngModel)]="investments.equity_return_rate" placeholder="Equity return (yr)" />
-      </div>
+        <span class="pct">%</span>
+        </div>
+    </div>
     </section>
 
     <!-- Horizon -->

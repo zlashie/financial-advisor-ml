@@ -33,3 +33,102 @@ button:disabled { opacity: .5; cursor: default; }
 
 .raw summary { cursor: pointer; margin: 8px 0; }
 .raw pre { max-height: 240px; overflow: auto; background: #111; color: #d5ffd5; padding: 12px; border-radius: 8px; }
+
+.layout-top {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+.layout-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  margin: 0 0 var(--gap);
+}
+
+.total-box {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  align-items: center;
+  gap: 12px;
+}
+
+.readonly {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.layout-results {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.align-right { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+@media (max-width: 1000px) {
+  .layout-top { grid-template-columns: 1fr 1fr; }
+  .layout-results { grid-template-columns: 1fr; }
+}
+
+/* Investments: 2x2 (values on top, rates below) */
+.invest-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+}
+
+/* Little % badge to the right of rate inputs */
+.rate-wrap{
+  position:relative;
+}
+.rate-wrap input{ width:100%; padding-right:28px; }
+.rate-wrap .pct{
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  color:#777; font-size:12px;
+}
+
+/* Make buttons not jump height compared to inputs */
+.link{ line-height:1; }
+
+/* Debts layout */
+.debt-row {
+  display: grid;
+  grid-template-columns: 1fr 100px auto;  /* wide | small | button */
+  gap: 10px;
+  align-items: center;
+}
+
+.debt-row .amount {
+  width: 100%;
+}
+
+.debt-row .rate-wrap {
+  position: relative;
+}
+
+.debt-row .rate {
+  width: 100%;
+  padding-right: 26px; 
+}
+
+.debt-row .pct {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #666;
+}
